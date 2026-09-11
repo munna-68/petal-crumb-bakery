@@ -1,3 +1,4 @@
+import { withBase } from "@/lib/withBase";
 /**
  * Quiet Patisserie Editorial: a photo-first, asymmetric landing page that
  * turns the reference image's magazine-like rhythm into a responsive web flow.
@@ -7,7 +8,7 @@ import { Link } from "wouter";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { galleryItems } from "@/lib/bakeryData";
 
-const heroCake = "/images/photo-1578985545062-69928b1d9587.jpg";
+const heroCake = withBase("/images/photo-1578985545062-69928b1d9587.jpg");
 
 export default function Home() {
   return (
@@ -45,20 +46,20 @@ export default function Home() {
               <Link href="/about" className="mt-8 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#8f4149] underline underline-offset-4">Meet the baker <ArrowRight size={14} /></Link>
             </div>
             <div className="visual-tile min-h-[330px] sm:min-h-[410px]">
-              <img src="/images/photo-1602351447937-745cb720612f.jpg" alt="A simply frosted cake on a plate" />
+              <img src={withBase("/images/photo-1602351447937-745cb720612f.jpg")} alt="A simply frosted cake on a plate" />
             </div>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <Link href="/menu" className="group relative min-h-[250px] overflow-hidden bg-[#f0eeeb]">
-              <img className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" src="/images/photo-1535254973040-607b474cb50d.jpg" alt="Single tier celebration cake" />
+              <img className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" src={withBase("/images/photo-1535254973040-607b474cb50d.jpg")} alt="Single tier celebration cake" />
               <span className="absolute bottom-4 left-4 bg-[#fbf9f4] px-3 py-2 text-[9px] font-bold uppercase tracking-[.13em] text-[#443633]">Shop the menu</span>
             </Link>
             <Link href="/about" className="group relative min-h-[250px] overflow-hidden bg-[#f0eeeb]">
-              <img className="h-full w-full object-cover object-[55%_center] transition duration-500 group-hover:scale-[1.035]" src="/images/photo-1556910103-1c02745aae4d.jpg" alt="Baker preparing a cake" />
+              <img className="h-full w-full object-cover object-[55%_center] transition duration-500 group-hover:scale-[1.035]" src={withBase("/images/photo-1556910103-1c02745aae4d.jpg")} alt="Baker preparing a cake" />
               <span className="absolute bottom-4 left-4 bg-[#fbf9f4] px-3 py-2 text-[9px] font-bold uppercase tracking-[.13em] text-[#443633]">From the studio</span>
             </Link>
             <Link href="/custom-order" className="group relative min-h-[250px] overflow-hidden bg-[#f0eeeb]">
-              <img className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" src="/images/photo-1559620192-032c4bc4674e.jpg" alt="Pink buttercream cake" />
+              <img className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]" src={withBase("/images/photo-1559620192-032c4bc4674e.jpg")} alt="Pink buttercream cake" />
               <span className="absolute bottom-4 left-4 bg-[#fbf9f4] px-3 py-2 text-[9px] font-bold uppercase tracking-[.13em] text-[#443633]">Custom order</span>
             </Link>
           </div>
