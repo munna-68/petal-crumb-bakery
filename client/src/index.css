@@ -1,0 +1,102 @@
+/* Quiet Patisserie Editorial: porcelain canvas, rosewood emphasis, and fine editorial type. */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --primary: oklch(0.49 0.09 18);
+  --primary-foreground: oklch(0.985 0.008 68);
+  --radius: 0.2rem;
+  --background: oklch(0.982 0.008 75);
+  --foreground: oklch(0.25 0.018 35);
+  --card: oklch(0.995 0.004 80);
+  --card-foreground: oklch(0.25 0.018 35);
+  --popover: oklch(0.995 0.004 80);
+  --popover-foreground: oklch(0.25 0.018 35);
+  --secondary: oklch(0.956 0.025 12);
+  --secondary-foreground: oklch(0.34 0.025 35);
+  --muted: oklch(0.95 0.009 72);
+  --muted-foreground: oklch(0.52 0.026 35);
+  --accent: oklch(0.93 0.04 13);
+  --accent-foreground: oklch(0.30 0.025 35);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.88 0.018 52);
+  --input: oklch(0.88 0.018 52);
+  --ring: oklch(0.49 0.09 18);
+}
+
+.dark { --background: oklch(0.23 0.02 35); --foreground: oklch(0.95 0.012 70); }
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { scroll-behavior: smooth; }
+  body { @apply bg-background text-foreground; font-family: "DM Sans", sans-serif; letter-spacing: -0.01em; }
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]), [type="button"]:not(:disabled), [type="submit"]:not(:disabled), a[href], select:not(:disabled), input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled) { @apply cursor-pointer; }
+}
+
+@layer components {
+  .container { width: 100%; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+  .flex { min-height: 0; min-width: 0; }
+  @media (min-width: 640px) { .container { padding-left: 1.5rem; padding-right: 1.5rem; } }
+  @media (min-width: 1024px) { .container { max-width: 1280px; padding-left: 2rem; padding-right: 2rem; } }
+}
+
+::selection { background: #e8c1c0; color: #342b29; }
+.font-display { font-family: "Cormorant Garamond", Georgia, serif; }
+.paper-texture { background-image: radial-gradient(rgba(91, 64, 57, .08) .5px, transparent .5px); background-size: 5px 5px; }
+.eyebrow { color: #a8515a; font-size: 10px; font-weight: 700; letter-spacing: .18em; line-height: 1.2; text-transform: uppercase; }
+.display-title { color: #342b29; font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; letter-spacing: -.055em; line-height: .92; }
+.button-rose { display: inline-flex; align-items: center; gap: .55rem; background: #a8515a; color: #fffaf5; font-size: 10px; font-weight: 700; letter-spacing: .13em; line-height: 1; text-transform: uppercase; transition: transform 160ms cubic-bezier(.23,1,.32,1), background 160ms ease; }
+.button-rose:hover { background: #8f4149; transform: translateY(-1px); }
+.button-rose:active { transform: scale(.97); }
+.button-ink { display: inline-flex; align-items: center; gap: .55rem; border: 1px solid #51413d; color: #342b29; font-size: 10px; font-weight: 700; letter-spacing: .13em; line-height: 1; text-transform: uppercase; transition: background 160ms ease, color 160ms ease, transform 160ms cubic-bezier(.23,1,.32,1); }
+.button-ink:hover { background: #342b29; color: #fffaf5; transform: translateY(-1px); }
+.button-ink:active { transform: scale(.97); }
+.field-base { width: 100%; border: 1px solid #d8c9c3; background: #fffdf9; padding: .78rem .85rem; font-size: .875rem; line-height: 1.2; color: #342b29; outline: none; transition: border-color 160ms ease, box-shadow 160ms ease; }
+.field-base:focus { border-color: #a8515a; box-shadow: 0 0 0 3px rgba(168,81,90,.12); }
+.visual-tile { overflow: hidden; background: #f0ebe5; }
+.visual-tile img { height: 100%; width: 100%; object-fit: cover; transition: transform 500ms cubic-bezier(.23,1,.32,1); }
+.visual-tile:hover img { transform: scale(1.035); }
+.footer-label { color: #d9aca9; font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+.calendar-seven { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.order-studio-grid { display: grid; gap: 2rem; }
+@media (min-width: 1024px) { .order-studio-grid { grid-template-columns: minmax(0, 1fr) 360px; gap: 2.5rem; } }
+.logo-bloom { position: relative; display: inline-block; flex: none; border: 1px solid #b2666b; transform: rotate(45deg); }
+.logo-bloom i { position: absolute; display: block; width: 42%; height: 42%; border-radius: 60% 40% 60% 40%; background: #a8515a; }
+.logo-bloom i:nth-of-type(1) { left: 7%; top: 7%; }
+.logo-bloom i:nth-of-type(2) { right: 7%; top: 7%; transform: rotate(90deg); }
+.logo-bloom i:nth-of-type(3) { bottom: 7%; right: 7%; transform: rotate(180deg); }
+.logo-bloom i:nth-of-type(4) { bottom: 7%; left: 7%; transform: rotate(270deg); }
+.logo-bloom b { position: absolute; left: 40%; top: 40%; height: 20%; width: 20%; border-radius: 999px; background: #342b29; }
+.logo-bloom--inverse { border-color: #d9aca9; }
+.logo-bloom--inverse i { background: #d9aca9; }
+.logo-bloom--inverse b { background: #f7f2eb; }
+@media (prefers-reduced-motion: no-preference) { .fade-up { animation: fadeUp 520ms cubic-bezier(.23,1,.32,1) both; } @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } } }
