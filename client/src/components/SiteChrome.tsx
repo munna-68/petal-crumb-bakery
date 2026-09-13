@@ -97,8 +97,6 @@ export function SiteHeader() {
                   className={`pointer-events-none absolute inset-x-3 bottom-0.5 h-px origin-left bg-[var(--rosewood)] transition-[transform,opacity] duration-300 ${active ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0 group-hover:scale-x-100"}`}
                   aria-hidden
                 />
-                {/* active dot */}
-                {active && <span className="absolute -top-0.5 right-1 h-1 w-1 rounded-full bg-[var(--rosewood)]" aria-hidden />}
               </Link>
             );
           })}
