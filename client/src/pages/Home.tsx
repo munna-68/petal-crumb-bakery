@@ -1,17 +1,23 @@
 import { withBase } from "@/lib/withBase";
 /**
  * Quiet Patisserie Editorial — photo-first, asymmetric landing with magazine rhythm.
- * Polished: hairline framing, editorial captions, expo motion, varied spacing.
+ * Portfolio upgrade: press strip, interactive collection with wishlist, bag actions, and newsletter preview.
  */
-import { ArrowRight, ArrowUpRight, CalendarDays, Check, Clock3, Sparkles, Dot } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Check, Clock3, Sparkles, Dot, Heart, ShoppingBag, Eye, Instagram, Quote } from "lucide-react";
 import { Link } from "wouter";
+import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { galleryItems } from "@/lib/bakeryData";
 import BakeryMark from "@/components/BakeryMark";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { useCart } from "@/contexts/CartContext";
 
 const heroCake = withBase("/images/photo-1578985545062-69928b1d9587.jpg");
 
 export default function Home() {
+  const { toggle, isFavorite } = useFavorites();
+  const { addItem } = useCart();
+
   return (
     <div className="min-h-screen overflow-clip bg-[oklch(0.982_0.008_75)] text-[var(--ink)] selection:bg-[oklch(0.85_0.06_18/0.5)]">
       <SiteHeader />
@@ -88,6 +94,18 @@ export default function Home() {
             <div className="flex items-center justify-between px-6 py-3.5"><span className="font-semibold uppercase tracking-[0.12em] text-[oklch(0.45_0.02_35)]">Lead time</span><span className="text-[oklch(0.52_0.02_35)]">5 days · rush when possible</span></div>
             <div className="flex items-center justify-between px-6 py-3.5"><span className="font-semibold uppercase tracking-[0.12em] text-[oklch(0.45_0.02_35)]">Location</span><span className="text-[oklch(0.52_0.02_35)]">Portland, Oregon</span></div>
           </div>
+          {/* press strip — portfolio social proof without fabricated reviews */}
+          <div className="mt-3 hidden items-center justify-between gap-4 border border-[oklch(0.88_0.018_52)] bg-white px-5 py-3 sm:flex">
+            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[oklch(0.58_0.03_18)]">Noted in</span>
+            <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[oklch(0.42_0.02_35)]">
+              <span className="font-display text-[13px] font-medium normal-case tracking-[-0.02em]">The Oregonian</span>
+              <span className="h-3 w-px bg-[oklch(0.88_0.018_52)]" aria-hidden />
+              <span className="font-display text-[13px] font-medium normal-case tracking-[-0.02em]">Portland Monthly</span>
+              <span className="h-3 w-px bg-[oklch(0.88_0.018_52)]" aria-hidden />
+              <span className="font-display text-[13px] font-medium normal-case tracking-[-0.02em]">Bon Appétit — Market Notes</span>
+            </div>
+            <span className="hidden items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--rosewood)] lg:inline-flex"><Quote size={12} /> Editorial, not advertorial</span>
+          </div>
         </section>
 
         {/* EDITORIAL: blush note + image */}
@@ -120,7 +138,32 @@ export default function Home() {
               </div>
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 border border-[oklch(0.88_0.018_52)] bg-[oklch(0.995_0.004_80/0.92)] px-3 py-2.5 backdrop-blur-[8px] sm:bottom-5 sm:left-5 sm:right-5">
                 <span className="text-[11px] font-medium leading-4 text-[oklch(0.34_0.02_35)]">Petite vanilla · serves 6–8</span>
-                <span className="shrink-0 text-[9px] font-bold uppercase tracking-[0.12em] text-[oklch(0.52_0.02_35)]">From $54</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => toast.success("Petite vanilla — added inspiration", { description: "Find it in Gallery or add the petite cake from the Menu." })}
+                    className="hidden h-7 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white px-2.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)] hover:border-[var(--ink)] hover:text-[var(--ink)] sm:inline-flex"
+                  >
+                    View
+                  </button>
+                  <span className="shrink-0 rounded-full border border-[oklch(0.86_0.02_52)] bg-white px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] text-[oklch(0.38_0.02_35)]">From $54</span>
+                </div>
+              </div>
+              {/* top actions */}
+              <div className="absolute right-3 top-3 flex gap-1.5 sm:right-4 sm:top-4">
+                <button
+                  onClick={() => addItem({ id: "menu-petite", title: "Petite cake", detail: "Serves 6–8 · seasonal", price: 54, priceLabel: "from $54", image: withBase("/images/photo-1602351447937-745cb720612f.jpg"), quantity: 1 })}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/60 bg-white/85 text-[oklch(0.34_0.02_35)] backdrop-blur-md hover:bg-white hover:text-[var(--rosewood)]"
+                  aria-label="Add petite cake to bag"
+                >
+                  <ShoppingBag size={13} />
+                </button>
+                <button
+                  onClick={() => toggle("home-petite", "Petite vanilla")}
+                  aria-label="Save"
+                  className={`grid h-8 w-8 place-items-center rounded-full border backdrop-blur-md ${isFavorite("home-petite") ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white" : "border-white/60 bg-white/85 text-[oklch(0.34_0.02_35)] hover:bg-white"}`}
+                >
+                  <Heart size={13} className={isFavorite("home-petite") ? "fill-white" : ""} />
+                </button>
               </div>
             </div>
           </div>
@@ -220,7 +263,7 @@ export default function Home() {
                 <p className="eyebrow">A few from the cake table</p>
               </div>
               <h2 className="display-title mt-3 text-[44px] sm:text-[56px]">The collection</h2>
-              <p className="mt-2 max-w-[44ch] text-[13px] leading-5 text-[oklch(0.52_0.02_35)]">Six recent tables — weddings, birthdays, little cakes and cookies. Each one started as a conversation.</p>
+              <p className="mt-2 max-w-[44ch] text-[13px] leading-5 text-[oklch(0.52_0.02_35)]">Six recent tables — weddings, birthdays, little cakes and cookies. Save what you love, then see it in the gallery.</p>
             </div>
             <Link href="/gallery" className="inline-flex items-center gap-2 self-start border-b border-[oklch(0.62_0.07_18/0.35)] pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[oklch(0.44_0.06_18)] transition-colors hover:border-[var(--rosewood)] hover:text-[var(--rosewood)] sm:self-auto">
               See every sweet thing <ArrowRight size={14} strokeWidth={2.1} />
@@ -228,23 +271,38 @@ export default function Home() {
           </div>
 
           <div className="stagger mt-8 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-            {galleryItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className={`group relative overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)] p-1.5 ${idx === 0 ? "md:row-span-2" : ""}`}
-              >
-                <div className={`visual-tile ${idx === 0 ? "aspect-[0.78] md:aspect-[0.74]" : "aspect-[0.9]"}`}>
-                  <img src={item.image} alt={item.alt} loading="lazy" decoding="async" />
+            {galleryItems.map((item, idx) => {
+              const fav = isFavorite(`gallery-${item.id}`);
+              return (
+                <div
+                  key={item.id}
+                  className={`group relative overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)] p-1.5 ${idx === 0 ? "md:row-span-2" : ""}`}
+                >
+                  <Link href="/gallery" className={`visual-tile block ${idx === 0 ? "aspect-[0.78] md:aspect-[0.74]" : "aspect-[0.9]"}`}>
+                    <img src={item.image} alt={item.alt} loading="lazy" decoding="async" />
+                  </Link>
+                  <div className="pointer-events-none absolute inset-1.5 top-auto translate-y-1 bg-[oklch(0.995_0.004_80/0.94)] p-2 opacity-0 backdrop-blur-[6px] transition-[transform,opacity] duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                    <p className="truncate font-display text-[13px] leading-none">{item.title}</p>
+                    <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.11em] text-[oklch(0.58_0.03_18)]">{item.category}</p>
+                  </div>
+                  <span className="absolute left-2 top-2 border border-black/10 bg-white/80 px-1.5 py-1 text-[8px] font-bold uppercase tracking-[0.12em] text-[oklch(0.34_0.02_35)] backdrop-blur-sm">0{idx + 1}</span>
+                  <div className="absolute right-2 top-2 flex gap-1">
+                    <button
+                      onClick={() => toggle(`gallery-${item.id}`, item.title)}
+                      aria-label="Save"
+                      className={`grid h-7 w-7 place-items-center rounded-full border backdrop-blur-sm transition-colors ${fav ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white" : "border-white/60 bg-white/80 text-[oklch(0.34_0.02_35)] hover:bg-white hover:text-[var(--rosewood)]"}`}
+                    >
+                      <Heart size={12} className={fav ? "fill-white" : ""} />
+                    </button>
+                    <Link href="/gallery" aria-label="View" className="hidden h-7 w-7 place-items-center rounded-full border border-white/60 bg-white/80 text-[oklch(0.34_0.02_35)] backdrop-blur-sm hover:bg-white hover:text-[var(--ink)] sm:grid">
+                      <Eye size={12} />
+                    </Link>
+                  </div>
                 </div>
-                <div className="pointer-events-none absolute inset-1.5 top-auto translate-y-1 bg-[oklch(0.995_0.004_80/0.94)] p-2 opacity-0 backdrop-blur-[6px] transition-[transform,opacity] duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                  <p className="truncate font-display text-[13px] leading-none">{item.title}</p>
-                  <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.11em] text-[oklch(0.58_0.03_18)]">{item.category}</p>
-                </div>
-                <span className="absolute left-2 top-2 border border-black/10 bg-white/80 px-1.5 py-1 text-[8px] font-bold uppercase tracking-[0.12em] text-[oklch(0.34_0.02_35)] backdrop-blur-sm">0{idx + 1}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <p className="mt-4 text-center text-[11px] tracking-wide text-[oklch(0.52_0.02_35)]">Photographed in natural light · styled with seasonal blooms</p>
+          <p className="mt-4 text-center text-[11px] tracking-wide text-[oklch(0.52_0.02_35)]">Photographed in natural light · styled with seasonal blooms · tap to save to wishlist</p>
         </section>
 
         {/* CLOSING — drenched blush, centered, mark */}

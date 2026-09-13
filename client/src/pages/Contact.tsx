@@ -1,18 +1,38 @@
-/** Quiet Patisserie Editorial: contact + FAQ — clear, helpful, no fabricated social proof. */
-import { useState } from "react";
-import { Mail, MapPin, Send, Clock3, ShieldCheck, ChevronDown } from "lucide-react";
+/** Quiet Patisserie Editorial: contact + FAQ — now with working map, corrected routing, and richer demo interactions. */
+import { useState, useRef } from "react";
+import { Mail, MapPin, Send, Clock3, ShieldCheck, ChevronDown, Phone, Navigation, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "wouter";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { faqItems } from "@/lib/bakeryData";
+import { MapView } from "@/components/Map";
 
 export default function Contact() {
   const [open, setOpen] = useState<number | null>(0);
+  const mapRef = useRef<google.maps.Map | null>(null);
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const name = String(fd.get("name") || "").trim();
+    const email = String(fd.get("email") || "").trim();
+    const detail = String(fd.get("detail") || "").trim();
+    if (!name || !email || !detail) {
+      toast.error("Please fill the required fields", { description: "Name, email and details are needed." });
+      return;
+    }
     toast.success("Your note is ready for the studio.", {
       description: "This demo form does not send an email yet — in production it would email and create a draft order.",
     });
     (e.currentTarget as HTMLFormElement).reset();
+  };
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText("417 SE 8th Ave, Portland, OR 97214");
+      toast.success("Address copied", { description: "417 SE 8th Ave, Portland, OR 97214" });
+    } catch {
+      toast("Address", { description: "417 SE 8th Ave, Portland, OR 97214" });
+    }
   };
 
   return (
@@ -45,11 +65,20 @@ export default function Contact() {
                   </span>
                   hello@petalandcrumb.com
                 </a>
+                <button
+                  onClick={() => toast.success("Phone — demo", { description: "In a live bakery this would dial the studio. For the portfolio, please email — we reply within a day." })}
+                  className="flex items-center gap-3 rounded-[2px] py-1 text-left text-[14px] font-medium text-[oklch(0.28_0.02_35)] hover:text-[var(--rosewood)]"
+                >
+                  <span className="grid h-8 w-8 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white text-[var(--rosewood)]">
+                    <Phone size={14} strokeWidth={1.9} />
+                  </span>
+                  (503) 555-0148 · demo number
+                </button>
                 <p className="flex items-center gap-3 text-[14px] leading-6 text-[oklch(0.36_0.02_35)]">
                   <span className="grid h-8 w-8 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white text-[var(--rosewood)]">
                     <MapPin size={14} strokeWidth={1.9} />
                   </span>
-                  Portland, Oregon · pickup + local delivery
+                  417 SE 8th Ave, Portland, OR 97214
                 </p>
                 <p className="flex items-center gap-3 text-[13px] leading-5 text-[oklch(0.52_0.02_35)]">
                   <span className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]">
@@ -57,6 +86,19 @@ export default function Contact() {
                   </span>
                   Studio hours · Tue–Sat 10a–5p · replies within a day
                 </p>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={copyAddress} className="inline-flex items-center gap-1.5 border border-[oklch(0.86_0.02_52)] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)] hover:border-[var(--ink)] hover:text-[var(--ink)]">
+                    <Copy size={12} /> Copy address
+                  </button>
+                  <a
+                    href="https://maps.google.com/?q=417+SE+8th+Ave+Portland+OR+97214"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 border border-[oklch(0.86_0.02_52)] bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)] hover:border-[var(--ink)] hover:text-[var(--ink)]"
+                  >
+                    <Navigation size={12} /> Open in Maps <ExternalLink size={11} />
+                  </a>
+                </div>
               </div>
 
               <div className="mt-6 flex flex-wrap gap-2 text-[11px]">
@@ -83,9 +125,19 @@ export default function Contact() {
                   Email <span className="text-[var(--rosewood)]">*</span>
                   <input required type="email" name="email" autoComplete="email" className="field-base mt-2" placeholder="you@example.com" />
                 </label>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-[oklch(0.34_0.02_35)] sm:col-span-2">
-                  What are you celebrating?
-                  <input name="occasion" className="field-base mt-2" placeholder="A birthday, a shower, a Tuesday…" />
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-[oklch(0.34_0.02_35)]">
+                  Occasion
+                  <select name="occasion" className="field-base mt-2" defaultValue="">
+                    <option value="" disabled>Select one</option>
+                    <option>Birthday</option>
+                    <option>Wedding</option>
+                    <option>Shower</option>
+                    <option>Just because</option>
+                  </select>
+                </label>
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-[oklch(0.34_0.02_35)]">
+                  Preferred date
+                  <input name="date" type="date" className="field-base mt-2" />
                 </label>
                 <label className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-[oklch(0.34_0.02_35)] sm:col-span-2">
                   A little more detail <span className="text-[var(--rosewood)]">*</span>
@@ -98,12 +150,77 @@ export default function Contact() {
               </button>
               <p className="mt-3 text-[11px] leading-5 text-[oklch(0.58_0.03_18)]">
                 For the fastest price and availability check, please use{" "}
-                <a href="/petal-crumb-bakery/custom-order" className="underline decoration-[var(--rosewood)]/30 underline-offset-4 hover:decoration-[var(--rosewood)]">
+                <Link href="/custom-order" className="underline decoration-[var(--rosewood)]/30 underline-offset-4 hover:decoration-[var(--rosewood)]">
                   the custom order studio
-                </a>
+                </Link>
                 .
               </p>
             </form>
+          </div>
+        </section>
+
+        {/* Map — Portland studio */}
+        <section className="container pb-10 sm:pb-14">
+          <div className="overflow-hidden border border-[oklch(0.88_0.018_52)] bg-white p-2 sm:p-2.5">
+            <div className="grid gap-2 lg:grid-cols-[360px_1fr]">
+              <div className="border border-[oklch(0.88_0.018_52)] bg-[oklch(0.97_0.008_72)] p-5 sm:p-6">
+                <p className="eyebrow">Find the studio</p>
+                <h3 className="mt-2 font-display text-[22px] font-medium leading-none tracking-[-0.02em]">Pickup in SE Portland</h3>
+                <p className="mt-2 text-[13px] leading-5 text-[oklch(0.46_0.02_35)]">We’re a home studio near the Hawthorne District — pickup is smooth, parking is easy, and we’ll text you when the cake is boxed.</p>
+                <div className="mt-4 space-y-2 text-[12.5px] leading-5 text-[oklch(0.46_0.02_35)]">
+                  <p className="flex gap-2"><MapPin size={14} className="mt-0.5 shrink-0 text-[var(--rosewood)]" /> 417 SE 8th Ave, Portland, OR 97214</p>
+                  <p className="flex gap-2"><Clock3 size={14} className="mt-0.5 shrink-0 text-[var(--rosewood)]" /> Tue–Sat 10a–5p — pickup windows confirmed by email</p>
+                  <p className="flex gap-2"><Mail size={14} className="mt-0.5 shrink-0 text-[var(--rosewood)]" /> hello@petalandcrumb.com</p>
+                </div>
+                <div className="mt-5 flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (mapRef.current) {
+                        mapRef.current.panTo({ lat: 45.5231, lng: -122.6765 });
+                        mapRef.current.setZoom(15);
+                      }
+                      toast("Studio centered", { description: "Map centered on SE Portland · portfolio demo uses Google Maps when available." });
+                    }}
+                    className="inline-flex items-center gap-1.5 border border-[var(--ink)] bg-[var(--ink)] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-white hover:bg-black"
+                  >
+                    <Navigation size={13} /> Center map
+                  </button>
+                  <button onClick={copyAddress} className="inline-flex items-center gap-1.5 border border-[oklch(0.86_0.02_52)] bg-white px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)] hover:border-[var(--ink)] hover:text-[var(--ink)]">
+                    <Copy size={13} /> Copy
+                  </button>
+                </div>
+                <p className="mt-3 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">Delivery within our Portland zone is $18 flat — calculated in the studio.</p>
+              </div>
+              <div className="relative min-h-[320px] overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)]">
+                <MapView
+                  className="h-[420px] min-h-[320px] w-full"
+                  initialCenter={{ lat: 45.5231, lng: -122.6765 }}
+                  initialZoom={13}
+                  onMapReady={(map) => {
+                    mapRef.current = map;
+                    // add a marker for the studio
+                    // @ts-ignore - advanced marker may not be available in demo, fallback
+                    try {
+                      // @ts-ignore
+                      if (window.google?.maps?.marker?.AdvancedMarkerElement) {
+                        // @ts-ignore
+                        new window.google.maps.marker.AdvancedMarkerElement({
+                          map,
+                          position: { lat: 45.5231, lng: -122.6765 },
+                          title: "Petal & Crumb Studio",
+                        });
+                      } else if (window.google?.maps?.Marker) {
+                        // @ts-ignore
+                        new window.google.maps.Marker({ map, position: { lat: 45.5231, lng: -122.6765 }, title: "Petal & Crumb Studio" });
+                      }
+                    } catch {}
+                  }}
+                />
+                <div className="pointer-events-none absolute left-3 top-3 border border-black/10 bg-white/85 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[oklch(0.34_0.02_35)] backdrop-blur-md">
+                  Portland · SE · Studio pickup
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -120,8 +237,8 @@ export default function Contact() {
               <div className="mt-6 hidden border border-[oklch(0.84_0.06_18/0.35)] bg-white/55 p-4 backdrop-blur-sm lg:block">
                 <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-[oklch(0.42_0.02_35)]">Quick links</p>
                 <div className="mt-2 flex flex-col gap-1.5 text-[13px]">
-                  <a href="/petal-crumb-bakery/menu" className="underline decoration-[var(--rosewood)]/20 underline-offset-4 hover:decoration-[var(--rosewood)]">See the menu</a>
-                  <a href="/petal-crumb-bakery/custom-order" className="underline decoration-[var(--rosewood)]/20 underline-offset-4 hover:decoration-[var(--rosewood)]">Try the live quote</a>
+                  <Link href="/menu" className="underline decoration-[var(--rosewood)]/20 underline-offset-4 hover:decoration-[var(--rosewood)]">See the menu</Link>
+                  <Link href="/custom-order" className="underline decoration-[var(--rosewood)]/20 underline-offset-4 hover:decoration-[var(--rosewood)]">Try the live quote</Link>
                 </div>
               </div>
             </div>

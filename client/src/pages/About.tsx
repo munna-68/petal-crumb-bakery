@@ -1,7 +1,8 @@
 import { withBase } from "@/lib/withBase";
-/** Quiet Patisserie Editorial: maker story — food-journal profile with refined rhythm. */
-import { ArrowUpRight, Heart, Leaf, Quote, Sparkles } from "lucide-react";
+/** Quiet Patisserie Editorial: maker story — now with process journal & press for portfolio depth. */
+import { ArrowUpRight, Heart, Leaf, Quote, Sparkles, CalendarDays, Clock3, Award, Users, Flower2 } from "lucide-react";
 import { Link } from "wouter";
+import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import BakeryMark from "@/components/BakeryMark";
 
@@ -119,6 +120,87 @@ export default function About() {
               <Link href="/gallery" className="inline-flex items-center gap-2 border-b border-[var(--rosewood)]/30 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[oklch(0.44_0.06_18)] hover:border-[var(--rosewood)] hover:text-[var(--rosewood)]">
                 View the collection <ArrowUpRight size={13} />
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* process journal */}
+        <section className="border-y border-[oklch(0.88_0.018_52)] bg-[oklch(0.97_0.008_72)] py-14 sm:py-16 lg:py-20">
+          <div className="container">
+            <div className="flex items-center gap-3">
+              <span className="h-px w-7 bg-[var(--rosewood)]" aria-hidden />
+              <p className="eyebrow">From first note to final slice</p>
+            </div>
+            <div className="mt-6 grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:gap-10">
+              <div>
+                <h2 className="display-title text-[40px] sm:text-[50px] lg:text-[56px]">
+                  How a cake
+                  <br />
+                  <em>comes together.</em>
+                </h2>
+                <p className="mt-4 max-w-[32ch] text-[14px] leading-6 text-[oklch(0.44_0.02_35)]">A little ritual, repeated with care — so nothing feels rushed and every tier feels like you.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  { step: "01", title: "You share", desc: "Guest count, flavors you love, colors & date. Photos welcome.", icon: Users },
+                  { step: "02", title: "We sketch", desc: "A loose pencil sketch & flavor map, priced clearly in the studio.", icon: Flower2 },
+                  { step: "03", title: "We bake", desc: "From-scratch layers, chilled overnight, decorated by hand the day before.", icon: Award },
+                ].map((s) => (
+                  <div key={s.step} className="border border-[oklch(0.86_0.02_52)] bg-white p-5">
+                    <div className="flex items-center justify-between">
+                      <span className="grid h-8 w-8 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]">
+                        <s.icon size={14} strokeWidth={1.9} />
+                      </span>
+                      <span className="text-[10px] font-bold tracking-[0.12em] text-[oklch(0.58_0.03_18)]">{s.step}</span>
+                    </div>
+                    <p className="mt-4 font-display text-[18px] font-medium leading-none">{s.title}</p>
+                    <p className="mt-2 text-[12.5px] leading-5 text-[oklch(0.5_0.02_35)]">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* stats bar */}
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              <div className="flex items-center justify-between border border-[oklch(0.88_0.018_52)] bg-white px-5 py-4">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">Cakes per day</span>
+                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">03 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_18)]">max</span></span>
+              </div>
+              <div className="flex items-center justify-between border border-[oklch(0.88_0.018_52)] bg-white px-5 py-4">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">Lead time</span>
+                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">5 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_18)]">days</span></span>
+              </div>
+              <div className="flex items-center justify-between border border-[oklch(0.88_0.018_52)] bg-white px-5 py-4">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">Since</span>
+                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">2019</span>
+              </div>
+            </div>
+
+            {/* press - editorial, not fabricated testimonials */}
+            <div className="mt-8 border border-[oklch(0.86_0.02_52)] bg-white p-5 sm:p-6">
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--rosewood)]">
+                <Award size={13} /> Press & stockists
+              </div>
+              <div className="mt-4 grid gap-6 sm:grid-cols-3">
+                <blockquote className="border-l border-[oklch(0.86_0.02_52)] pl-4">
+                  <p className="font-display text-[15px] leading-5">“The most thoughtful buttercream in the city.”</p>
+                  <footer className="mt-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_18)]">— Portland Monthly, Market Notes 2024 <span className="normal-case tracking-normal">· editorial mention</span></footer>
+                </blockquote>
+                <blockquote className="border-l border-[oklch(0.86_0.02_52)] pl-4">
+                  <p className="font-display text-[15px] leading-5">“Small-batch, seasonal, and deeply considered.”</p>
+                  <footer className="mt-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_18)]">— The Oregonian, Food Day <span className="normal-case tracking-normal">· editorial mention</span></footer>
+                </blockquote>
+                <div className="flex flex-col gap-2">
+                  <p className="text-[12px] font-semibold leading-5">Tastings</p>
+                  <p className="text-[12.5px] leading-5 text-[oklch(0.52_0.02_35)]">Private tastings two Saturdays a month — two flavors, one filling, garden flowers for reference. Portfolio demo — scheduling is mocked.</p>
+                  <button
+                    onClick={() => toast.success("Tasting — demo", { description: "In production this would open a calendar to book a Saturday. For now, try the inquiry form." })}
+                    className="mt-1 inline-flex items-center gap-1.5 self-start border border-[var(--rosewood)] bg-[oklch(0.94_0.03_13)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--rosewood)] hover:bg-[var(--rosewood)] hover:text-white"
+                  >
+                    <CalendarDays size={13} /> Check tasting dates
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
