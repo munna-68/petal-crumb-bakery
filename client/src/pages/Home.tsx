@@ -11,6 +11,11 @@ import { galleryItems } from "@/lib/bakeryData";
 import BakeryMark from "@/components/BakeryMark";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { useCart } from "@/contexts/CartContext";
+import { PressMarquee } from "@/components/PressMarquee";
+import { CakeFinderQuiz } from "@/components/CakeFinderQuiz";
+import { FinishComparisonSlider } from "@/components/FinishComparisonSlider";
+import { SliceJournalCarousel } from "@/components/SliceJournalCarousel";
+import { LiveAvailabilityChecker } from "@/components/LiveAvailabilityChecker";
 
 const heroCake = withBase("/images/photo-1578985545062-69928b1d9587.jpg");
 
@@ -23,21 +28,21 @@ export default function Home() {
       <SiteHeader />
       <main id="main">
         {/* HERO — generous, asymmetric, hairline-accented */}
-        <section className="container pt-5 sm:pt-7">
+        <section className="container pt-5 sm:pt-7" data-reveal="fade">
           <div className="relative grid overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)] lg:min-h-[620px] lg:grid-cols-[1.06fr_.94fr]">
             {/* copy */}
             <div className="relative flex flex-col justify-between px-6 py-9 sm:px-10 sm:py-12 lg:px-[56px] lg:py-[54px]">
-              <div className="fade-up">
+              <div>
                 <div className="flex items-center gap-3">
                   <span className="h-px w-7 bg-[var(--rosewood)]" aria-hidden />
                   <p className="eyebrow">Custom cakes · Portland, Oregon</p>
                 </div>
                 <h1 className="display-title mt-6 max-w-[560px] text-[46px] leading-[0.90] sm:text-[64px] lg:text-[86px] xl:text-[92px]">
-                  A little more
+                  <span className="hero-line"><span className="hero-line-inner" style={{ "--line-delay": "60ms" } as React.CSSProperties}>A little more</span></span>
                   <br />
-                  <em>meaning</em> on
+                  <span className="hero-line"><span className="hero-line-inner" style={{ "--line-delay": "180ms" } as React.CSSProperties}><em>meaning</em> on</span></span>
                   <br />
-                  the table.
+                  <span className="hero-line"><span className="hero-line-inner" style={{ "--line-delay": "300ms" } as React.CSSProperties}>the table.</span></span>
                 </h1>
                 <p className="prose-measure mt-6 max-w-[42ch] text-[14px] leading-6 text-[oklch(0.42_0.02_35)] sm:text-[15px] sm:leading-7">
                   Celebration cakes, gathered from seasonal flavor, textured buttercream, and a little garden magic. Baked to order, decorated by hand.
@@ -67,7 +72,7 @@ export default function Home() {
               <img
                 src={heroCake}
                 alt="Floral celebration cake with garden blooms on a linen-draped table"
-                className="h-full w-full object-cover object-[50%_38%] lg:object-center"
+                className="parallax-hero h-full w-full object-cover object-[50%_38%] lg:object-center"
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
@@ -94,18 +99,8 @@ export default function Home() {
             <div className="flex items-center justify-between px-6 py-3.5"><span className="font-semibold uppercase tracking-[0.12em] text-[oklch(0.45_0.02_35)]">Lead time</span><span className="text-[oklch(0.52_0.02_35)]">5 days · rush when possible</span></div>
             <div className="flex items-center justify-between px-6 py-3.5"><span className="font-semibold uppercase tracking-[0.12em] text-[oklch(0.45_0.02_35)]">Location</span><span className="text-[oklch(0.52_0.02_35)]">Portland, Oregon</span></div>
           </div>
-          {/* press strip — portfolio social proof without fabricated reviews */}
-          <div className="mt-3 hidden items-center justify-between gap-4 border border-[oklch(0.88_0.018_52)] bg-white px-5 py-3 sm:flex">
-            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[oklch(0.58_0.03_18)]">Noted in</span>
-            <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[oklch(0.42_0.02_35)]">
-              <span className="font-display text-[13px] font-medium normal-case tracking-[-0.02em]">The Oregonian</span>
-              <span className="h-3 w-px bg-[oklch(0.88_0.018_52)]" aria-hidden />
-              <span className="font-display text-[13px] font-medium normal-case tracking-[-0.02em]">Portland Monthly</span>
-              <span className="h-3 w-px bg-[oklch(0.88_0.018_52)]" aria-hidden />
-              <span className="font-display text-[13px] font-medium normal-case tracking-[-0.02em]">Bon Appétit — Market Notes</span>
-            </div>
-            <span className="hidden items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--rosewood)] lg:inline-flex"><Quote size={12} /> Editorial, not advertorial</span>
-          </div>
+          {/* continuous press marquee with reduced-motion support */}
+          <PressMarquee />
         </section>
 
         {/* EDITORIAL: blush note + image */}
@@ -191,10 +186,20 @@ export default function Home() {
               </Link>
             ))}
           </div>
+
+          {/* FINISH COMPARISON SLIDER */}
+          <div className="mt-8" data-reveal="up">
+            <FinishComparisonSlider />
+          </div>
+        </section>
+
+        {/* INTERACTIVE CAKE FINDER QUIZ */}
+        <section className="container py-6 sm:py-10" data-reveal="up">
+          <CakeFinderQuiz />
         </section>
 
         {/* ORDER STUDIO PREVIEW — editorial, not SaaS grid */}
-        <section className="border-y border-[oklch(0.88_0.018_52)] bg-[oklch(0.97_0.008_72)] py-14 sm:py-20 lg:py-24">
+        <section className="border-y border-[oklch(0.88_0.018_52)] bg-[oklch(0.97_0.008_72)] py-14 sm:py-20 lg:py-24" data-reveal="fade">
           <div className="container grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-12">
             <div className="lg:sticky lg:top-[104px]">
               <p className="eyebrow">Less back-and-forth, more buttercream</p>
@@ -210,6 +215,11 @@ export default function Home() {
               <div className="mt-6 flex flex-wrap gap-2 text-[11px] text-[oklch(0.52_0.02_35)]">
                 <span className="inline-flex items-center gap-1.5 border border-[oklch(0.88_0.018_52)] bg-white px-3 py-1.5"><CalendarDays size={13} className="text-[var(--rosewood)]" /> Real availability</span>
                 <span className="inline-flex items-center gap-1.5 border border-[oklch(0.88_0.018_52)] bg-white px-3 py-1.5"><Clock3 size={13} className="text-[var(--rosewood)]" /> Rush when possible</span>
+              </div>
+
+              {/* LIVE AVAILABILITY STATUS INDICATOR */}
+              <div className="mt-8">
+                <LiveAvailabilityChecker />
               </div>
             </div>
 
@@ -254,8 +264,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* SLICE JOURNAL CAROUSEL */}
+        <section className="container py-10 sm:py-14" data-reveal="up">
+          <SliceJournalCarousel />
+        </section>
+
         {/* COLLECTION — editorial strip */}
-        <section className="container py-14 sm:py-20 lg:py-24">
+        <section className="container py-14 sm:py-20 lg:py-24" data-reveal="up">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
@@ -306,7 +321,7 @@ export default function Home() {
         </section>
 
         {/* CLOSING — drenched blush, centered, mark */}
-        <section className="relative overflow-hidden border-y border-[oklch(0.84_0.06_18/0.35)] bg-[oklch(0.93_0.04_13)] px-5 py-14 sm:px-8 sm:py-20 lg:py-[84px]">
+        <section className="relative overflow-hidden border-y border-[oklch(0.84_0.06_18/0.35)] bg-[oklch(0.93_0.04_13)] px-5 py-14 sm:px-8 sm:py-20 lg:py-[84px]" data-reveal="up">
           <div className="pointer-events-none absolute inset-0 paper-texture opacity-[0.55]" aria-hidden />
           <div className="pointer-events-none absolute -right-10 -top-10 hidden h-64 w-64 rounded-full border border-[oklch(0.62_0.07_18/0.18)] lg:block" aria-hidden />
           <div className="relative mx-auto max-w-3xl text-center">

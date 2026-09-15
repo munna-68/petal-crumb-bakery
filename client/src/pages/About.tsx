@@ -12,12 +12,12 @@ export default function About() {
       <SiteHeader />
       <main id="main">
         {/* hero — editorial split with frame */}
-        <section className="container py-6 sm:py-8 lg:py-10">
+        <section className="container py-6 sm:py-8 lg:py-10" data-reveal="fade">
           <div className="grid overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)] lg:grid-cols-[0.92fr_1.08fr]">
             <div className="relative min-h-[420px] overflow-hidden bg-[oklch(0.94_0.009_72)] p-2 sm:min-h-[480px] lg:order-2 lg:p-2.5">
               <div className="visual-tile h-full min-h-[420px] sm:min-h-[480px]">
                 <img
-                  className="h-full w-full object-cover object-[50%_30%]"
+                  className="parallax-hero h-full w-full object-cover object-[50%_30%]"
                   src={withBase("/images/photo-1556910103-1c02745aae4d.jpg")}
                   alt="Maya, the baker, at work in a sunlit kitchen with flour-dusted hands"
                   loading="eager"
@@ -55,7 +55,7 @@ export default function About() {
         </section>
 
         {/* way of working */}
-        <section className="container grid gap-10 py-12 sm:py-16 lg:grid-cols-[0.78fr_1.22fr] lg:gap-14 lg:py-20">
+        <section className="container grid gap-10 py-12 sm:py-16 lg:grid-cols-[0.78fr_1.22fr] lg:gap-14 lg:py-20" data-reveal="up">
           <div className="lg:sticky lg:top-[104px] lg:self-start">
             <p className="eyebrow">The way I work</p>
             <h2 className="display-title mt-3 max-w-[14ch] text-[38px] leading-[0.92] sm:text-[48px] lg:text-[56px]">
@@ -82,7 +82,7 @@ export default function About() {
               They’re meant to be eaten, admired, and remembered long after the candles come down. If that sounds like your kind of cake, we’ll get along beautifully.
             </p>
 
-            <div className="grid gap-3 pt-2 sm:grid-cols-2">
+            <div className="grid gap-3 pt-2 sm:grid-cols-2" data-stagger>
               <div className="border border-[oklch(0.86_0.02_52)] bg-white p-4">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]">
                   <Heart size={14} strokeWidth={1.9} />
@@ -125,7 +125,7 @@ export default function About() {
         </section>
 
         {/* process journal */}
-        <section className="border-y border-[oklch(0.88_0.018_52)] bg-[oklch(0.97_0.008_72)] py-14 sm:py-16 lg:py-20">
+        <section className="border-y border-[oklch(0.88_0.018_52)] bg-[oklch(0.97_0.008_72)] py-14 sm:py-16 lg:py-20" data-reveal="up">
           <div className="container">
             <div className="flex items-center gap-3">
               <span className="h-px w-7 bg-[var(--rosewood)]" aria-hidden />
@@ -140,7 +140,7 @@ export default function About() {
                 </h2>
                 <p className="mt-4 max-w-[32ch] text-[14px] leading-6 text-[oklch(0.44_0.02_35)]">A little ritual, repeated with care — so nothing feels rushed and every tier feels like you.</p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-3" data-stagger>
                 {[
                   { step: "01", title: "You share", desc: "Guest count, flavors you love, colors & date. Photos welcome.", icon: Users },
                   { step: "02", title: "We sketch", desc: "A loose pencil sketch & flavor map, priced clearly in the studio.", icon: Flower2 },
@@ -160,19 +160,31 @@ export default function About() {
               </div>
             </div>
 
-            {/* stats bar */}
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            {/* stats bar with animated count-up */}
+            <div className="mt-8 grid gap-3 sm:grid-cols-4" data-stagger>
               <div className="flex items-center justify-between border border-[oklch(0.88_0.018_52)] bg-white px-5 py-4">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">Cakes per day</span>
-                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">03 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_18)]">max</span></span>
+                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">
+                  <span data-count-target="3" data-count-prefix="0">03</span> <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_18)]">max</span>
+                </span>
               </div>
               <div className="flex items-center justify-between border border-[oklch(0.88_0.018_52)] bg-white px-5 py-4">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">Lead time</span>
-                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">5 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_18)]">days</span></span>
+                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">
+                  <span data-count-target="5">5</span> <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_18)]">days</span>
+                </span>
               </div>
               <div className="flex items-center justify-between border border-[oklch(0.88_0.018_52)] bg-white px-5 py-4">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">Since</span>
-                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">2019</span>
+                <span className="font-display text-[28px] leading-none tracking-[-0.02em]" data-count-target="2019">
+                  2019
+                </span>
+              </div>
+              <div className="flex items-center justify-between border border-[oklch(0.88_0.018_52)] bg-white px-5 py-4">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">Celebrations</span>
+                <span className="font-display text-[28px] leading-none tracking-[-0.02em]">
+                  <span data-count-target="480" data-count-suffix="+">480+</span>
+                </span>
               </div>
             </div>
 
