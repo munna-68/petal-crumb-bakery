@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { faqItems } from "@/lib/bakeryData";
-import { MapView } from "@/components/Map";
+import { MapView, type MapHandle } from "@/components/Map";
 
 export default function Contact() {
   const [open, setOpen] = useState<number | null>(0);
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const mapRef = useRef<MapHandle | null>(null);
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -176,14 +176,12 @@ export default function Contact() {
                   <button
                     onClick={() => {
                       if (mapRef.current) {
-                        mapRef.current.panTo({ lat: 45.5231, lng: -122.6765 });
-                        mapRef.current.setZoom(15);
+                        mapRef.current.reset();
                       }
-                      toast("Studio centered", { description: "Map centered on SE Portland · portfolio demo uses Google Maps when available." });
                     }}
                     className="inline-flex items-center gap-1.5 border border-[var(--ink)] bg-[var(--ink)] px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-white hover:bg-black"
                   >
-                    <Navigation size={13} /> Center map
+                    <Navigation size={13} /> Center studio
                   </button>
                   <button onClick={copyAddress} className="inline-flex items-center gap-1.5 border border-[oklch(0.86_0.02_52)] bg-white px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)] hover:border-[var(--ink)] hover:text-[var(--ink)]">
                     <Copy size={13} /> Copy
@@ -193,32 +191,9 @@ export default function Contact() {
               </div>
               <div className="relative min-h-[320px] overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)]">
                 <MapView
+                  ref={mapRef}
                   className="h-[420px] min-h-[320px] w-full"
-                  initialCenter={{ lat: 45.5231, lng: -122.6765 }}
-                  initialZoom={13}
-                  onMapReady={(map) => {
-                    mapRef.current = map;
-                    // add a marker for the studio
-                    // @ts-ignore - advanced marker may not be available in demo, fallback
-                    try {
-                      // @ts-ignore
-                      if (window.google?.maps?.marker?.AdvancedMarkerElement) {
-                        // @ts-ignore
-                        new window.google.maps.marker.AdvancedMarkerElement({
-                          map,
-                          position: { lat: 45.5231, lng: -122.6765 },
-                          title: "Petal & Crumb Studio",
-                        });
-                      } else if (window.google?.maps?.Marker) {
-                        // @ts-ignore
-                        new window.google.maps.Marker({ map, position: { lat: 45.5231, lng: -122.6765 }, title: "Petal & Crumb Studio" });
-                      }
-                    } catch {}
-                  }}
                 />
-                <div className="pointer-events-none absolute left-3 top-3 border border-black/10 bg-white/85 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[oklch(0.34_0.02_35)] backdrop-blur-md">
-                  Portland · SE · Studio pickup
-                </div>
               </div>
             </div>
           </div>

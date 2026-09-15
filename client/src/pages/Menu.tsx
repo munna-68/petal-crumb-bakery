@@ -82,7 +82,7 @@ export default function Menu() {
     <div className="min-h-screen bg-[oklch(0.982_0.008_75)] text-[var(--ink)]">
       <SiteHeader />
       <main id="main">
-        <section className="container pb-6 pt-10 sm:pb-8 sm:pt-14 lg:pt-16">
+        <section className="container pb-6 pt-10 sm:pb-8 sm:pt-14 lg:pt-16" data-reveal="fade">
           <div className="flex items-center gap-3">
             <span className="h-px w-7 bg-[var(--rosewood)]" aria-hidden />
             <p className="eyebrow">A small, seasonal menu</p>
@@ -122,7 +122,7 @@ export default function Menu() {
                   key={f}
                   onClick={() => setFilter(f)}
                   aria-pressed={active}
-                  className={`rounded-full border px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] transition-all ${active ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white shadow-[0_4px_14px_oklch(0.49_0.09_18/0.2)]" : "border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)] hover:border-[oklch(0.72_0.03_18)] hover:bg-[oklch(0.94_0.03_13)]"}`}
+                  className={`min-h-[40px] rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] transition-all ${active ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white shadow-[0_4px_14px_oklch(0.49_0.09_18/0.2)]" : "border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)] hover:border-[oklch(0.72_0.03_18)] hover:bg-[oklch(0.94_0.03_13)]"}`}
                 >
                   {f}
                 </button>
@@ -134,8 +134,8 @@ export default function Menu() {
           </div>
         </section>
 
-        <section className="container pb-14 pt-6 sm:pb-20 lg:pb-24">
-          <div className="grid gap-6 gap-y-10 sm:grid-cols-2 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-4">
+        <section className="container pb-14 pt-6 sm:pb-20 lg:pb-24" data-reveal="up">
+          <div className="grid gap-6 gap-y-10 sm:grid-cols-2 sm:gap-x-5 lg:grid-cols-4 lg:gap-x-4" data-stagger>
             {visible.map((item) => {
               const fav = isFavorite(item.id);
               return (

@@ -56,7 +56,7 @@ export default function Gallery() {
     <div className="min-h-screen bg-[oklch(0.982_0.008_75)] text-[var(--ink)]">
       <SiteHeader />
       <main id="main">
-        <section className="container pb-6 pt-10 sm:pb-8 sm:pt-14">
+        <section className="container pb-6 pt-10 sm:pb-8 sm:pt-14" data-reveal="fade">
           <div className="flex items-center gap-3">
             <span className="h-px w-7 bg-[var(--rosewood)]" aria-hidden />
             <p className="eyebrow">A few favorite tables</p>
@@ -71,7 +71,7 @@ export default function Gallery() {
           </p>
         </section>
 
-        <section className="container pb-14 sm:pb-20">
+        <section className="container pb-14 sm:pb-20" data-reveal="up">
           <div className="flex flex-wrap items-center gap-2 border-y border-[oklch(0.88_0.018_52)] bg-white/60 py-3 backdrop-blur-sm sm:gap-1.5 sm:py-3.5" role="tablist" aria-label="Gallery filters">
             {filters.map((item) => {
               const activeTab = filter === item;
@@ -83,7 +83,7 @@ export default function Gallery() {
                   role="tab"
                   aria-selected={activeTab}
                   onClick={() => setFilter(item)}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--rosewood)] focus-visible:ring-offset-2 ${
+                  className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--rosewood)] focus-visible:ring-offset-2 ${
                     activeTab
                       ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white shadow-[0_4px_14px_oklch(0.49_0.09_18/0.2)]"
                       : "border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)] hover:border-[oklch(0.72_0.03_18)] hover:bg-[oklch(0.94_0.03_13)] hover:text-[var(--ink)]"
@@ -103,7 +103,7 @@ export default function Gallery() {
             </span>
           </div>
 
-          <div className="stagger mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="stagger mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-stagger>
             {visible.map((item, index) => {
               const fav = isFavorite(`gallery-${item.id}`);
               return (

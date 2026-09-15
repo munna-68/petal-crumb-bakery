@@ -94,7 +94,7 @@ function ChoiceButton({
 function FieldLabel({ children, htmlFor, required }: { children: React.ReactNode; htmlFor?: string; required?: boolean }) {
   return (
     <label htmlFor={htmlFor} className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)]">
-      <span className="flex items-baseline gap-1.5">
+      <span className="inline-flex flex-wrap items-baseline gap-1.5">
         {children} {required && <span className="text-[var(--rosewood)]" aria-hidden>*</span>}
       </span>
     </label>
@@ -194,7 +194,7 @@ export default function CustomOrder() {
   return (
     <div className="min-h-screen bg-[oklch(0.974_0.008_75)] text-[var(--ink)]">
       <SiteHeader />
-      <main id="main" className="container pb-10 pt-6 sm:pb-16 sm:pt-8">
+      <main id="main" className="container pb-28 pt-6 sm:pb-32 lg:pb-16 sm:pt-8">
         <Link
           href="/"
           className="inline-flex items-center gap-2 rounded-[2px] py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[oklch(0.52_0.02_35)] transition-colors hover:text-[var(--rosewood)] focus-visible:outline-offset-4"
@@ -336,18 +336,18 @@ export default function CustomOrder() {
                 helper={rush ? "Rush dates may be available from tomorrow." : "Custom cakes need five full days’ notice. Max 3 per day."}
               />
               <div className="mt-6 overflow-hidden border border-[oklch(0.86_0.02_52)] bg-white shadow-[0_10px_30px_oklch(0.25_0.018_35/0.04)]">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[oklch(0.91_0.015_52)] bg-[oklch(0.97_0.008_72)] px-4 py-3.5">
-                  <span className="inline-flex items-center gap-2 text-[12px] font-semibold tracking-[-0.01em]">
-                    <CalendarDays size={16} strokeWidth={1.9} className="text-[var(--rosewood)]" /> Kitchen availability
-                    <span className="hidden text-[11px] font-normal text-[oklch(0.52_0.02_35)] sm:inline">· {monthLabel}</span>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[oklch(0.91_0.015_52)] bg-[oklch(0.97_0.008_72)] px-3 py-3 sm:px-4 sm:py-3.5">
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold tracking-[-0.01em]">
+                    <CalendarDays size={15} strokeWidth={1.9} className="text-[var(--rosewood)]" /> Kitchen availability
+                    <span className="hidden text-[11px] font-normal text-[oklch(0.52_0.02_35)] min-[360px]:inline">· {monthLabel}</span>
                   </span>
-                  <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.11em] text-[oklch(0.52_0.02_35)]">
+                  <span className="inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-[0.11em] text-[oklch(0.52_0.02_35)]">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Max 3 per day
                   </span>
                 </div>
                 <div className="calendar-seven border-b border-[oklch(0.91_0.015_52)] bg-white">
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                    <span key={d} className="py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-[oklch(0.58_0.03_35)]">
+                    <span key={d} className="py-2 text-center text-[9.5px] sm:text-[10px] font-bold uppercase tracking-[0.1em] text-[oklch(0.58_0.03_35)]">
                       {d}
                     </span>
                   ))}
@@ -365,7 +365,7 @@ export default function CustomOrder() {
                     const active = selectedDate === key;
                     const todayKey = toKey(today);
                     const isToday = key === todayKey;
-                    const capacityLabel = isFull ? "Full" : blockedByLead ? "Lead time" : idx % 4 === 0 ? "2 left" : "Open";
+                    const capacityLabel = isFull ? "Full" : blockedByLead ? "Lead" : idx % 4 === 0 ? "2 left" : "Open";
                     return (
                       <button
                         key={key}
@@ -374,20 +374,21 @@ export default function CustomOrder() {
                         onClick={() => setSelectedDate(key)}
                         aria-pressed={active}
                         aria-label={`${formatLongDate(key)} — ${capacityLabel}`}
-                        className={`relative flex aspect-square flex-col items-center justify-center border-b border-r p-1 text-center transition-all duration-150 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-[var(--rosewood)] focus-visible:ring-inset
+                        className={`relative flex aspect-square flex-col items-center justify-center border-b border-r p-0.5 sm:p-1 text-center transition-all duration-150 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-[var(--rosewood)] focus-visible:ring-inset
                           ${disabled ? "cursor-not-allowed bg-[oklch(0.97_0.008_72)] text-[oklch(0.72_0.015_52)]" : active ? "z-[1] bg-[var(--rosewood)] text-white shadow-[inset_0_0_0_1px_oklch(0.44_0.09_18)]" : "bg-white text-[oklch(0.28_0.02_35)] hover:bg-[oklch(0.94_0.03_13)] hover:text-[var(--ink)]"}`}
                       >
-                        <span className={`text-[13px] font-semibold leading-none ${isToday && !disabled && !active ? "rounded-full bg-[oklch(0.94_0.03_13)] px-1.5 py-1 ring-1 ring-[var(--rosewood)]/25" : ""}`}>
+                        <span className={`text-[12px] sm:text-[13px] font-semibold leading-none ${isToday && !disabled && !active ? "rounded-full bg-[oklch(0.94_0.03_13)] px-1 sm:px-1.5 py-0.5 sm:py-1 ring-1 ring-[var(--rosewood)]/25" : ""}`}>
                           {day.getDate()}
                         </span>
                         <span
-                          className={`mt-1 rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.07em] leading-none ${
+                          className={`mt-0.5 sm:mt-1 max-w-full truncate rounded-full px-1 sm:px-1.5 py-0.5 text-[7px] min-[360px]:text-[8px] font-bold uppercase tracking-[0.04em] sm:tracking-[0.07em] leading-none ${
                             active ? "bg-white/15 text-white" : disabled ? "bg-transparent text-[oklch(0.66_0.015_52)]" : capacityLabel === "2 left" ? "bg-amber-500/12 text-amber-900" : capacityLabel === "Open" ? "bg-emerald-500/10 text-emerald-900" : "bg-transparent"
                           }`}
                         >
-                          {capacityLabel}
+                          <span className="hidden min-[380px]:inline">{isFull ? "Full" : blockedByLead ? "Lead" : capacityLabel}</span>
+                          <span className="min-[380px]:hidden">{isFull ? "✕" : blockedByLead ? "—" : capacityLabel === "2 left" ? "2" : "•"}</span>
                         </span>
-                        {isToday && !disabled && !active && <span className="absolute bottom-1.5 h-1 w-1 rounded-full bg-[var(--rosewood)]" aria-hidden />}
+                        {isToday && !disabled && !active && <span className="absolute bottom-1 sm:bottom-1.5 h-1 w-1 rounded-full bg-[var(--rosewood)]" aria-hidden />}
                       </button>
                     );
                   })}
@@ -536,6 +537,34 @@ export default function CustomOrder() {
             </div>
           </aside>
         </div>
+
+        {/* Mobile sticky bottom quote & reserve action bar with safe area */}
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[oklch(0.86_0.02_52)] bg-white/95 px-4 pt-2.5 backdrop-blur-md lg:hidden shadow-[0_-8px_24px_oklch(0.25_0.018_35/0.08)] [padding-bottom:max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.08em] text-[oklch(0.42_0.02_35)]">
+                <span className="truncate">
+                  {product === "cake" ? `${sizes[cakeSize].label} cake` : product === "cupcakes" ? `${quantity} cupcakes` : product === "cookies" ? `${quantity} cookies` : "Studio consult"}
+                </span>
+              </div>
+              <div className="mt-0.5 flex items-baseline gap-1.5">
+                <span className="font-display text-[20px] font-semibold leading-none tracking-[-0.02em] text-[var(--ink)]">
+                  {currency(total)}
+                </span>
+                <span className="text-[10px] font-medium text-[var(--rosewood)]">
+                  ({currency(deposit)} dep.)
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => (document.querySelector<HTMLFormElement>("form") as HTMLFormElement | null)?.requestSubmit()}
+              className="button-rose shrink-0 px-4 py-2 text-[10.5px] min-h-[44px]"
+            >
+              Reserve date <ArrowRight size={13} strokeWidth={2.2} />
+            </button>
+          </div>
+        </div>
       </main>
       <SiteFooter />
     </div>
@@ -635,14 +664,14 @@ function QuoteCard({
 }) {
   return (
     <div
-      className={`border bg-white ${compact ? "border-[oklch(0.86_0.02_52)] p-5" : "border-[oklch(0.86_0.02_52)] p-6 shadow-[0_18px_50px_oklch(0.25_0.018_35/0.07)]"}`}
+      className={`border bg-white ${compact ? "border-[oklch(0.86_0.02_52)] p-4 sm:p-5" : "border-[oklch(0.86_0.02_52)] p-5 sm:p-6 shadow-[0_18px_50px_oklch(0.25_0.018_35/0.07)]"}`}
       aria-live="polite"
       aria-atomic="true"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="eyebrow">Your live estimate</p>
-          <h2 className="mt-1.5 font-display text-[26px] leading-none tracking-[-0.02em] sm:text-[28px]">The cake table</h2>
+          <h2 className="mt-1.5 font-display text-[24px] sm:text-[26px] leading-none tracking-[-0.02em] sm:text-[28px]">The cake table</h2>
           <p className="mt-1 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">Updates instantly as you choose</p>
         </div>
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[oklch(0.88_0.06_18/0.35)] bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]" aria-hidden>
@@ -652,8 +681,8 @@ function QuoteCard({
 
       <div className="mt-5 space-y-2.5 border-y border-[oklch(0.91_0.015_52)] py-4">
         {lineItems.map((item) => (
-          <div key={`${item.label}-${item.price}`} className="flex items-start justify-between gap-4 text-[13px]">
-            <span className="leading-5 text-[oklch(0.42_0.02_35)]">{item.label}</span>
+          <div key={`${item.label}-${item.price}`} className="flex items-start justify-between gap-3 text-[12.5px] sm:text-[13px]">
+            <span className="leading-5 text-[oklch(0.42_0.02_35)] truncate">{item.label}</span>
             <span className="shrink-0 font-semibold tracking-[-0.01em] text-[oklch(0.28_0.02_35)]">{currency(item.price)}</span>
           </div>
         ))}
@@ -661,7 +690,7 @@ function QuoteCard({
 
       <div className="flex items-end justify-between gap-4 pt-4">
         <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-[oklch(0.52_0.02_35)]">Estimated total</span>
-        <span key={total} className="font-display text-[34px] leading-none tracking-[-0.02em] sm:text-[38px] animate-[fadeUp_220ms_cubic-bezier(0.16,1,0.3,1)]">
+        <span key={total} className="font-display text-[32px] sm:text-[34px] leading-none tracking-[-0.02em] sm:text-[38px] animate-[fadeUp_220ms_cubic-bezier(0.16,1,0.3,1)]">
           {currency(total)}
         </span>
       </div>
@@ -669,7 +698,7 @@ function QuoteCard({
 
       <div className="mt-4 border-t border-[oklch(0.91_0.015_52)] pt-4">
         <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-[var(--rosewood)]">Reservation payment</p>
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-1 min-[340px]:grid-cols-2 gap-2.5 sm:gap-3">
           <div className="border border-[var(--rosewood)]/20 bg-[oklch(0.94_0.03_13)] p-3">
             <p className="text-[9px] font-bold uppercase tracking-[0.11em] text-[oklch(0.52_0.03_18)]">Deposit due now</p>
             <p className="mt-1 font-display text-[22px] leading-none tracking-[-0.02em]">{currency(deposit)}</p>
