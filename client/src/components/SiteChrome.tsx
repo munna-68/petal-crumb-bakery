@@ -73,10 +73,13 @@ export function SiteHeader() {
 
   return (
     <>
+      {/* 1.5px rosewood scroll progress rail */}
+      <div id="scroll-progress-rail" aria-hidden="true" />
+
       <header
-        className={`sticky top-0 z-50 border-b backdrop-blur-[10px] transition-[box-shadow,background-color,border-color] duration-300 ${
+        className={`site-header sticky top-0 z-50 border-b backdrop-blur-[10px] transition-[box-shadow,background-color,border-color] duration-300 ${
           scrolled
-            ? "border-[oklch(0.86_0.018_52/0.95)] bg-[oklch(0.982_0.008_75/0.92)] shadow-[0_8px_30px_oklch(0.25_0.018_35/0.06)]"
+            ? "border-[oklch(0.86_0.018_52/0.95)] bg-[oklch(0.982_0.008_75/0.94)] shadow-[0_8px_30px_oklch(0.25_0.018_35/0.06)]"
             : "border-[oklch(0.88_0.018_52/0.7)] bg-[oklch(0.982_0.008_75/0.84)]"
         }`}
       >
@@ -85,8 +88,8 @@ export function SiteHeader() {
           Skip to content
         </a>
 
-        <div className="container flex h-[68px] items-center justify-between gap-3 sm:h-[76px] sm:gap-5">
-          <Link href="/" className="group flex items-center gap-3 rounded-[2px] focus-visible:outline-offset-4" aria-label="Petal and Crumb home">
+        <div className="container header-inner flex h-[68px] items-center justify-between gap-3 sm:h-[76px] sm:gap-5 transition-[height] duration-240 ease-[cubic-bezier(0.16,1,0.3,1)]">
+          <Link href="/" className="group flex items-center gap-3 rounded-[2px] focus-visible:outline-offset-4 py-1" aria-label="Petal and Crumb home">
             <BakeryMark size="sm" />
             <span className="leading-none">
               <strong className="block font-display text-[18.5px] font-semibold tracking-[-0.04em] text-[var(--ink)] sm:text-[19px]">
@@ -106,13 +109,13 @@ export function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative rounded-[2px] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.13em] transition-colors duration-200 ${
+                  className={`relative rounded-[2px] px-3.5 py-2 text-[11px] font-semibold uppercase tracking-[0.13em] transition-colors duration-200 ${
                     active ? "text-[var(--rosewood)]" : "text-[oklch(0.34_0.02_35)] hover:text-[var(--ink)]"
                   }`}
                 >
                   {item.label}
                   <span
-                    className={`pointer-events-none absolute inset-x-3 bottom-0.5 h-px origin-left bg-[var(--rosewood)] transition-[transform,opacity] duration-300 ${active ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0 group-hover:scale-x-100"}`}
+                    className={`pointer-events-none absolute inset-x-3.5 bottom-0.5 h-px origin-left bg-[var(--rosewood)] transition-[transform,opacity] duration-300 ${active ? "scale-x-100 opacity-100" : "scale-x-0 opacity-0 group-hover:scale-x-100"}`}
                     aria-hidden
                   />
                 </Link>
@@ -120,24 +123,24 @@ export function SiteHeader() {
             })}
           </nav>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Search */}
+          <div className="flex items-center gap-2 sm:gap-2">
+            {/* Search - accessible on desktop & mobile with min 44px touch target */}
             <button
-              aria-label="Search"
+              aria-label="Search cakes, flavors, and studio"
               onClick={() => setSearchOpen(true)}
-              className="hidden h-9 w-9 place-items-center rounded-full border border-[oklch(0.84_0.02_52)] bg-white/60 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:text-[var(--ink)] sm:grid"
+              className="grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center rounded-full border border-[oklch(0.84_0.02_52)] bg-white/70 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:text-[var(--ink)]"
               title="Search (⌘K)"
             >
-              <Search size={15} strokeWidth={1.9} />
+              <Search size={16} strokeWidth={1.9} />
             </button>
 
-            {/* Favorites */}
+            {/* Favorites - desktop only */}
             <Link
               href="/gallery"
               aria-label={`Favorites ${favCount ? `· ${favCount} saved` : ""}`}
-              className="relative hidden h-9 w-9 place-items-center rounded-full border border-[oklch(0.84_0.02_52)] bg-white/60 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:text-[var(--rosewood)] sm:grid"
+              className="relative hidden h-11 w-11 min-h-[44px] min-w-[44px] place-items-center rounded-full border border-[oklch(0.84_0.02_52)] bg-white/70 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:text-[var(--rosewood)] sm:grid"
             >
-              <Heart size={15} strokeWidth={1.9} className={favCount ? "fill-[var(--rosewood)] text-[var(--rosewood)]" : ""} />
+              <Heart size={16} strokeWidth={1.9} className={favCount ? "fill-[var(--rosewood)] text-[var(--rosewood)]" : ""} />
               {favCount > 0 && (
                 <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--rosewood)] px-1 text-[9px] font-bold leading-none text-white">
                   {favCount}
@@ -145,13 +148,13 @@ export function SiteHeader() {
               )}
             </Link>
 
-            {/* Bag */}
+            {/* Bag - min 44px touch target */}
             <button
               aria-label={`Shopping bag ${bagCount ? `· ${bagCount} items` : ""}`}
               onClick={() => setBagOpen(true)}
-              className="relative grid h-9 w-9 place-items-center rounded-full border border-[oklch(0.84_0.02_52)] bg-white/60 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:text-[var(--ink)] sm:h-9 sm:w-9"
+              className="relative grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center rounded-full border border-[oklch(0.84_0.02_52)] bg-white/70 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:text-[var(--ink)]"
             >
-              <ShoppingBag size={15} strokeWidth={1.9} />
+              <ShoppingBag size={16} strokeWidth={1.9} />
               {bagCount > 0 && (
                 <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--rosewood)] px-1 text-[9px] font-bold leading-none text-white">
                   {bagCount}
@@ -159,14 +162,14 @@ export function SiteHeader() {
               )}
             </button>
 
-            {/* Account */}
+            {/* Account - desktop */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label="Account"
-                  className="hidden h-9 w-9 place-items-center rounded-full border border-[oklch(0.84_0.02_52)] bg-white/60 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:text-[var(--ink)] sm:grid"
+                  className="hidden h-11 w-11 min-h-[44px] min-w-[44px] place-items-center rounded-full border border-[oklch(0.84_0.02_52)] bg-white/70 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:text-[var(--ink)] sm:grid"
                 >
-                  <User size={15} strokeWidth={1.9} />
+                  <User size={16} strokeWidth={1.9} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 border-[oklch(0.88_0.018_52)] bg-white p-0">
@@ -206,45 +209,49 @@ export function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Desktop primary order CTA */}
             <Link
               href="/custom-order"
-              className="button-rose hidden px-4 py-[10px] text-[10px] sm:inline-flex"
+              className="button-rose hidden px-4 py-[11px] text-[10px] sm:inline-flex min-h-[44px]"
             >
               Start an order <ArrowUpRight size={13} strokeWidth={2.25} />
             </Link>
+
+            {/* Mobile menu toggle with min 44x44px target */}
             <button
               ref={buttonRef}
-              className="grid h-10 w-10 place-items-center border border-[oklch(0.84_0.02_52)] bg-white/60 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:text-[var(--ink)] hover:bg-white focus-visible:bg-white lg:hidden"
+              className="grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center border border-[oklch(0.84_0.02_52)] bg-white/70 text-[oklch(0.34_0.02_35)] transition-colors hover:border-[oklch(0.72_0.03_18)] hover:text-[var(--ink)] hover:bg-white focus-visible:bg-white lg:hidden"
               type="button"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
               aria-controls="mobile-nav"
               aria-label={open ? "Close navigation" : "Open navigation"}
             >
-              {open ? <X size={19} strokeWidth={1.9} /> : <Menu size={20} strokeWidth={1.9} />}
+              {open ? <X size={20} strokeWidth={1.9} /> : <Menu size={21} strokeWidth={1.9} />}
             </button>
           </div>
         </div>
 
-      {/* mobile drawer — polished: expo slide + scrim */}
+      {/* mobile drawer — polished: expo slide + scrim, safe area padding */}
       <div
         className={`lg:hidden ${open ? "pointer-events-auto" : "pointer-events-none"}`}
         aria-hidden={!open}
       >
         <div
           onClick={() => setOpen(false)}
-          className={`fixed inset-0 top-[68px] bg-[oklch(0.25_0.018_35/0.28)] backdrop-blur-[2px] transition-opacity duration-300 sm:top-[76px] ${open ? "opacity-100" : "opacity-0"}`}
+          className={`fixed inset-0 top-[68px] bg-[oklch(0.25_0.018_35/0.35)] backdrop-blur-[3px] transition-opacity duration-300 sm:top-[76px] ${open ? "opacity-100" : "opacity-0"}`}
         />
         <nav
           id="mobile-nav"
           ref={panelRef}
           aria-label="Mobile navigation"
-          className={`fixed inset-x-0 top-[68px] max-h-[calc(100dvh-68px)] overflow-auto border-t border-[oklch(0.88_0.018_52)] bg-[oklch(0.982_0.008_75)] shadow-[0_24px_40px_oklch(0.25_0.018_35/0.10)] transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] sm:top-[76px] sm:max-h-[calc(100dvh-76px)] ${open ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
+          style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 1.5rem))" }}
+          className={`fixed inset-x-0 top-[68px] max-h-[calc(100dvh-68px)] overflow-auto border-t border-[oklch(0.88_0.018_52)] bg-[oklch(0.982_0.008_75)] shadow-[0_24px_40px_oklch(0.25_0.018_35/0.12)] transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] sm:top-[76px] sm:max-h-[calc(100dvh-76px)] ${open ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0"}`}
         >
-          <div className="mx-auto flex max-w-[560px] flex-col px-5 py-3 sm:px-6">
-            <div className="flex items-center justify-between py-3">
+          <div className="mx-auto flex max-w-[560px] flex-col px-5 py-4 sm:px-6">
+            <div className="flex items-center justify-between py-2 border-b border-[oklch(0.91_0.015_52)]">
               <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[oklch(0.58_0.03_18)]">Navigate</p>
-              <span className="text-[10px] tracking-wide text-[oklch(0.52_0.02_35)]">Portland · pickup + delivery</span>
+              <span className="text-[10px] tracking-wide text-[oklch(0.52_0.02_35)]">Portland · studio pickup &amp; delivery</span>
             </div>
             {navItems.map((item) => {
               const active = location === item.href;
@@ -254,8 +261,8 @@ export function SiteHeader() {
                   href={item.href}
                   onClick={() => setOpen(false)}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center justify-between border-b border-[oklch(0.91_0.015_52)] py-[18px] text-[13px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-                    active ? "text-[var(--rosewood)]" : "text-[oklch(0.28_0.02_35)] hover:text-[var(--rosewood)]"
+                  className={`flex min-h-[48px] items-center justify-between border-b border-[oklch(0.91_0.015_52)] py-3 text-[14px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+                    active ? "text-[var(--rosewood)] font-bold" : "text-[oklch(0.28_0.02_35)] hover:text-[var(--rosewood)]"
                   }`}
                 >
                   <span>{item.label}</span>
@@ -263,30 +270,57 @@ export function SiteHeader() {
                 </Link>
               );
             })}
-            {/* mobile utility */}
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <button onClick={() => { setOpen(false); setSearchOpen(true); }} className="flex flex-col items-center gap-1.5 rounded-[2px] border border-[oklch(0.86_0.02_52)] bg-white px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[oklch(0.34_0.02_35)]">
-                <Search size={16} className="text-[var(--rosewood)]" /> Search
+
+            {/* mobile quick actions */}
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              <button
+                onClick={() => { setOpen(false); setSearchOpen(true); }}
+                className="flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-[2px] border border-[oklch(0.86_0.02_52)] bg-white p-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[oklch(0.34_0.02_35)] active:bg-[oklch(0.94_0.03_13)]"
+              >
+                <Search size={17} className="text-[var(--rosewood)]" /> Search
               </button>
-              <button onClick={() => { setOpen(false); setBagOpen(true); }} className="flex flex-col items-center gap-1.5 rounded-[2px] border border-[oklch(0.86_0.02_52)] bg-white px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[oklch(0.34_0.02_35)]">
-                <ShoppingBag size={16} className="text-[var(--rosewood)]" /> Bag {bagCount ? `· ${bagCount}` : ""}
+              <button
+                onClick={() => { setOpen(false); setBagOpen(true); }}
+                className="flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-[2px] border border-[oklch(0.86_0.02_52)] bg-white p-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[oklch(0.34_0.02_35)] active:bg-[oklch(0.94_0.03_13)]"
+              >
+                <ShoppingBag size={17} className="text-[var(--rosewood)]" /> Bag {bagCount ? `(${bagCount})` : ""}
               </button>
-              <Link href="/gallery" onClick={() => setOpen(false)} className="flex flex-col items-center gap-1.5 rounded-[2px] border border-[oklch(0.86_0.02_52)] bg-white px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[oklch(0.34_0.02_35)]">
-                <Heart size={16} className={favCount ? "fill-[var(--rosewood)] text-[var(--rosewood)]" : "text-[var(--rosewood)]"} /> Saved {favCount ? `· ${favCount}` : ""}
+              <Link
+                href="/gallery"
+                onClick={() => setOpen(false)}
+                className="flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-[2px] border border-[oklch(0.86_0.02_52)] bg-white p-2.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[oklch(0.34_0.02_35)] active:bg-[oklch(0.94_0.03_13)]"
+              >
+                <Heart size={17} className={favCount ? "fill-[var(--rosewood)] text-[var(--rosewood)]" : "text-[var(--rosewood)]"} /> Saved {favCount ? `(${favCount})` : ""}
               </Link>
             </div>
-            <Link href="/custom-order" onClick={() => setOpen(false)} className="button-rose mt-4 w-full justify-center py-4 text-[11px]">
+
+            <Link
+              href="/custom-order"
+              onClick={() => setOpen(false)}
+              className="button-rose mt-5 w-full justify-center min-h-[48px] py-4 text-[11px]"
+            >
               Build your cake <ArrowUpRight size={15} />
             </Link>
-            <p className="pb-6 pt-4 text-center text-[11px] leading-5 text-[oklch(0.52_0.02_35)]">
+
+            <p className="pt-5 text-center text-[11px] leading-5 text-[oklch(0.52_0.02_35)]">
               <a href="mailto:hello@petalandcrumb.com" className="underline decoration-[var(--rosewood)]/30 underline-offset-4 hover:decoration-[var(--rosewood)]">hello@petalandcrumb.com</a>
               <span className="mx-2 opacity-40">·</span>
-              Responses within a day
+              Portland, OR
             </p>
           </div>
         </nav>
       </div>
       </header>
+
+      {/* Floating Back to Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        aria-label="Back to top of page"
+        className="back-to-top fixed bottom-6 right-6 z-40 grid h-12 w-12 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white/95 text-[var(--rosewood)] shadow-[0_10px_30px_oklch(0.25_0.018_35/0.14)] backdrop-blur-md hover:bg-[var(--rosewood)] hover:text-white transition-colors"
+      >
+        <ArrowUpRight size={18} className="-rotate-45" strokeWidth={2.4} />
+      </button>
+
       <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
       <CartDrawer />
     </>
