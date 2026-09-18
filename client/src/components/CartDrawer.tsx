@@ -22,15 +22,15 @@ export function CartDrawer() {
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetContent className="flex w-full max-w-[420px] flex-col bg-[oklch(0.982_0.008_75)] p-0 sm:max-w-[420px]">
-        <SheetHeader className="border-b border-[oklch(0.88_0.018_52)] bg-white px-6 py-5 text-left">
+      <SheetContent className="flex w-full max-w-[420px] flex-col bg-[var(--cream)] p-0 sm:max-w-[420px]">
+        <SheetHeader className="border-b border-[oklch(0.9_0.022_65)] bg-[var(--paper)] px-6 py-5 text-left">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-full border border-[oklch(0.88_0.06_18/0.35)] bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]">
-              <ShoppingBag size={16} strokeWidth={1.9} />
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--blush)] text-[var(--terra)]">
+              <ShoppingBag size={17} strokeWidth={2} />
             </span>
             <div className="flex-1">
-              <SheetTitle className="font-display text-[22px] font-medium tracking-[-0.02em]">Your bag</SheetTitle>
-              <SheetDescription className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">
+              <SheetTitle className="font-display text-[22px] font-semibold tracking-[-0.01em]">Your bag</SheetTitle>
+              <SheetDescription className="text-[11.5px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink-mute)]">
                 {count === 0 ? "No items yet" : `${count} ${count === 1 ? "item" : "items"} · ${currency(subtotal)} subtotal`}
               </SheetDescription>
             </div>
@@ -39,69 +39,69 @@ export function CartDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-            <span className="grid h-14 w-14 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white text-[var(--rosewood)]">
-              <ShoppingBag size={22} strokeWidth={1.7} />
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-[var(--blush)] text-[var(--terra)]">
+              <ShoppingBag size={24} strokeWidth={1.8} />
             </span>
-            <p className="mt-5 font-display text-[26px] font-medium leading-none tracking-[-0.02em]">Your bag is waiting</p>
-            <p className="mt-2 max-w-[28ch] text-[13px] leading-5 text-[oklch(0.52_0.02_35)]">
+            <p className="mt-5 font-display text-[26px] font-semibold leading-none tracking-[-0.01em]">Your bag is waiting</p>
+            <p className="mt-2.5 max-w-[28ch] text-[13.5px] leading-5 text-[var(--ink-mute)]">
               Add a petite cake or a dozen cupcakes — your selections live-update here.
             </p>
-            <Link href="/menu" onClick={() => setIsOpen(false)} className="button-rose mt-6 px-6 py-3.5 text-[10px]">
-              Browse the menu <ArrowRight size={14} />
+            <Link href="/menu" onClick={() => setIsOpen(false)} className="button-rose mt-7 px-6 py-3.5 text-[13px]">
+              Browse the menu <ArrowRight size={15} />
             </Link>
-            <Link href="/custom-order" onClick={() => setIsOpen(false)} className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--rosewood)] underline decoration-[var(--rosewood)]/25 underline-offset-4 hover:decoration-[var(--rosewood)]">
+            <Link href="/custom-order" onClick={() => setIsOpen(false)} className="mt-4 text-[12.5px] font-extrabold text-[var(--terra)] underline decoration-[var(--terra)]/30 underline-offset-4 hover:decoration-[var(--terra)]">
               Or build a custom cake
             </Link>
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-auto divide-y divide-[oklch(0.91_0.015_52)]">
+            <div className="flex-1 overflow-auto divide-y divide-[oklch(0.9_0.022_65)] bg-[var(--paper)]">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-3 bg-white px-5 py-4">
-                  <div className="h-[72px] w-[72px] shrink-0 overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)] p-1">
+                <div key={item.id} className="flex gap-4 bg-[var(--paper)] px-5 py-4">
+                  <div className="h-[74px] w-[74px] shrink-0 overflow-hidden rounded-2xl bg-[var(--cream)]">
                     <img src={item.image} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate font-display text-[15px] font-medium leading-none">{item.title}</p>
-                        <p className="mt-1 text-[11px] leading-4 text-[oklch(0.52_0.02_35)]">{item.variant ?? item.detail}</p>
-                        <p className="mt-1 text-[11px] font-semibold text-[var(--rosewood)]">{item.priceLabel}</p>
+                        <p className="truncate font-display text-[15.5px] font-semibold leading-tight">{item.title}</p>
+                        <p className="mt-1 text-[11.5px] leading-4 text-[var(--ink-mute)]">{item.variant ?? item.detail}</p>
+                        <p className="mt-1 text-[11.5px] font-extrabold text-[var(--terra)]">{item.priceLabel}</p>
                       </div>
                       <button
                         aria-label={`Remove ${item.title}`}
                         onClick={() => removeItem(item.id)}
-                        className="grid h-7 w-7 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.52_0.02_35)] hover:border-[var(--rosewood)] hover:text-[var(--rosewood)]"
+                        className="grid h-8 w-8 place-items-center rounded-full bg-[var(--cream)] text-[var(--ink-mute)] transition-colors hover:bg-[var(--blush)] hover:text-[var(--terra)]"
                       >
-                        <Trash2 size={13} strokeWidth={1.9} />
+                        <Trash2 size={14} strokeWidth={2} />
                       </button>
                     </div>
                     <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center overflow-hidden rounded-full border border-[oklch(0.86_0.02_52)] bg-[oklch(0.97_0.008_72)]">
+                      <div className="flex items-center rounded-full border-[1.5px] border-[oklch(0.88_0.03_60)] bg-[var(--cream)]">
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="grid h-7 w-7 place-items-center text-[oklch(0.42_0.02_35)] hover:bg-white"
+                          className="grid h-8 w-8 place-items-center rounded-l-full text-[var(--ink-soft)] hover:bg-[var(--blush)]"
                           aria-label="Decrease quantity"
                         >
                           <Minus size={13} />
                         </button>
-                        <span className="min-w-[36px] text-center text-[12px] font-semibold tabular-nums">{item.quantity}</span>
+                        <span className="min-w-[34px] text-center text-[12.5px] font-extrabold tabular-nums">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="grid h-7 w-7 place-items-center text-[oklch(0.42_0.02_35)] hover:bg-white"
+                          className="grid h-8 w-8 place-items-center rounded-r-full text-[var(--ink-soft)] hover:bg-[var(--blush)]"
                           aria-label="Increase quantity"
                         >
                           <Plus size={13} />
                         </button>
                       </div>
-                      <span className="text-[13px] font-semibold tracking-[-0.01em]">{currency(item.price * item.quantity)}</span>
+                      <span className="text-[13.5px] font-extrabold tracking-[-0.01em]">{currency(item.price * item.quantity)}</span>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-[oklch(0.88_0.018_52)] bg-white px-6 py-5">
+            <div className="border-t border-[oklch(0.9_0.022_65)] bg-[var(--paper)] px-6 py-5">
               <div className="space-y-2 text-[13px]">
                 <div className="flex justify-between text-[oklch(0.46_0.02_35)]">
                   <span>Subtotal</span>

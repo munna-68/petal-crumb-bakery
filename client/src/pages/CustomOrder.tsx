@@ -69,17 +69,17 @@ function ChoiceButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`group relative min-h-[74px] border p-3.5 text-left transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:ring-2 focus-visible:ring-[var(--rosewood)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.982_0.008_75)] ${
+      className={`group relative min-h-[74px] rounded-2xl border-[1.5px] p-4 text-left transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:ring-2 focus-visible:ring-[var(--terra)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cream)] ${
         active
-          ? "border-[var(--rosewood)] bg-[oklch(0.94_0.03_13)] shadow-[inset_0_0_0_1px_var(--rosewood)]"
-          : "border-[oklch(0.86_0.018_52)] bg-[oklch(0.995_0.004_80)] hover:border-[oklch(0.72_0.03_18)] hover:bg-white hover:shadow-[0_6px_18px_oklch(0.25_0.018_35/0.06)] hover:-translate-y-[1px]"
+          ? "border-[var(--terra)] bg-[var(--blush)]/60"
+          : "border-[oklch(0.89_0.025_62)] bg-[var(--paper)] hover:border-[oklch(0.78_0.045_50)] hover:shadow-[0_8px_22px_oklch(0.305_0.033_42/0.08)] hover:-translate-y-[1px]"
       }`}
     >
       <span className="flex items-start justify-between gap-3">
         <span className="text-[14px] font-semibold leading-5 text-[oklch(0.28_0.02_35)]">{label}</span>
         <span
-          className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border text-white transition-all duration-200 ${
-            active ? "border-[var(--rosewood)] bg-[var(--rosewood)] scale-100" : "border-[oklch(0.84_0.02_52)] bg-white scale-90 opacity-60 group-hover:opacity-100 group-hover:scale-100"
+          className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-[1.5px] text-white transition-all duration-200 ${
+            active ? "border-[var(--terra)] bg-[var(--terra)] scale-100" : "border-[oklch(0.82_0.03_58)] bg-white scale-90 opacity-60 group-hover:opacity-100 group-hover:scale-100"
           }`}
           aria-hidden
         >
@@ -192,12 +192,12 @@ export default function CustomOrder() {
   const monthLabel = formatShortMonth(days[0] ?? today);
 
   return (
-    <div className="min-h-screen bg-[oklch(0.974_0.008_75)] text-[var(--ink)]">
+    <div className="min-h-screen bg-[var(--cream)] text-[var(--ink)]">
       <SiteHeader />
       <main id="main" className="container pb-28 pt-6 sm:pb-32 lg:pb-16 sm:pt-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-[2px] py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[oklch(0.52_0.02_35)] transition-colors hover:text-[var(--rosewood)] focus-visible:outline-offset-4"
+          className="inline-flex items-center gap-2 rounded-[2px] py-1 text-[13px] font-bold text-[var(--ink-mute)] transition-colors hover:text-[var(--terra)] focus-visible:outline-offset-4"
         >
           <ArrowLeft size={14} strokeWidth={2.1} /> Back to the studio
         </Link>
@@ -208,8 +208,8 @@ export default function CustomOrder() {
             <div className="border-b border-[oklch(0.88_0.018_52)] pb-8">
               <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--rosewood)]">
                 <span className="h-px w-6 bg-[var(--rosewood)]" aria-hidden /> Custom order studio
-                <span className="ml-2 hidden items-center gap-1.5 rounded-full border border-[oklch(0.88_0.018_52)] bg-white px-2.5 py-1 text-[9px] tracking-[0.12em] text-[oklch(0.52_0.02_35)] sm:inline-flex">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden /> Live estimate
+                <span className="ml-2 hidden items-center gap-1.5 rounded-full bg-[var(--paper)] px-3 py-1.5 text-[11px] font-extrabold text-[var(--ink-soft)] sm:inline-flex">
+                  <span className="h-2 w-2 rounded-full bg-[var(--sage-deep)]" aria-hidden /> Live estimate
                 </span>
               </div>
               <h1 className="display-title mt-3 text-[44px] leading-[0.92] sm:text-[56px] lg:text-[68px]">
@@ -289,13 +289,13 @@ export default function CustomOrder() {
                 </div>
               )}
               {product === "custom" && (
-                <div className="mt-6 border border-[oklch(0.86_0.02_52)] bg-[oklch(0.94_0.03_13)] p-5 sm:p-6">
-                  <p className="font-display text-[22px] leading-none tracking-[-0.02em] sm:text-2xl">A considered consult, then a clear plan.</p>
-                  <p className="prose-measure mt-2.5 max-w-[52ch] text-[14px] leading-6 text-[oklch(0.46_0.02_35)]">
+                <div className="mt-6 rounded-[1.5rem] bg-[var(--blush)]/50 p-5 sm:p-6">
+                  <p className="font-display text-[22px] font-semibold leading-tight tracking-[-0.01em] sm:text-2xl">A considered consult, then a clear plan.</p>
+                  <p className="prose-measure mt-2.5 max-w-[52ch] text-[14px] leading-6 text-[oklch(0.42_0.04_32)]">
                     For sculpted cakes, multiple desserts, or an idea that needs a little room to breathe, the studio consult covers concepting and a tailored proposal. We’ll meet, sketch, and price transparently.
                   </p>
-                  <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--rosewood)]">
-                    <Info size={13} strokeWidth={1.9} /> 60 min · in studio or video
+                  <p className="mt-3 inline-flex items-center gap-1.5 text-[11.5px] font-extrabold uppercase tracking-[0.08em] text-[oklch(0.45_0.08_20)]">
+                    <Info size={13} strokeWidth={2} /> 60 min · in studio or video
                   </p>
                 </div>
               )}
@@ -304,22 +304,22 @@ export default function CustomOrder() {
                 type="button"
                 onClick={() => setRush((c) => !c)}
                 aria-pressed={rush}
-                className={`mt-7 flex w-full items-start gap-4 border p-4 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--rosewood)] focus-visible:ring-offset-2 sm:p-4.5 ${
+                className={`mt-7 flex w-full items-start gap-4 rounded-2xl border-[1.5px] p-4 text-left transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[var(--terra)] focus-visible:ring-offset-2 ${
                   rush
-                    ? "border-[var(--rosewood)] bg-[oklch(0.94_0.03_13)] shadow-[inset_0_0_0_1px_var(--rosewood)]"
-                    : "border-[oklch(0.86_0.018_52)] bg-white hover:border-[oklch(0.72_0.03_18)] hover:bg-[oklch(0.995_0.004_80)]"
+                    ? "border-[var(--terra)] bg-[var(--blush)]/60"
+                    : "border-[oklch(0.89_0.025_62)] bg-[var(--paper)] hover:border-[oklch(0.78_0.045_50)]"
                 }`}
               >
                 <span
-                  className={`mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border transition-colors ${rush ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white" : "border-[oklch(0.80_0.02_52)] bg-white text-transparent"}`}
+                  className={`mt-0.5 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full border-[1.5px] transition-colors ${rush ? "border-[var(--terra)] bg-[var(--terra)] text-white" : "border-[oklch(0.8_0.035_55)] bg-white text-transparent"}`}
                   aria-hidden
                 >
                   <Check size={13} strokeWidth={2.7} />
                 </span>
                 <span className="min-w-0">
-                  <span className="flex flex-wrap items-center gap-2 text-[13px] font-semibold leading-5">
-                    <Clock3 size={15} strokeWidth={1.9} className="text-[var(--rosewood)]" /> Need it sooner?
-                    {rush && <span className="rounded-full bg-[var(--rosewood)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-white">Rush active · +35%</span>}
+                  <span className="flex flex-wrap items-center gap-2 text-[13.5px] font-extrabold leading-5">
+                    <Clock3 size={15} strokeWidth={2} className="text-[var(--terra)]" /> Need it sooner?
+                    {rush && <span className="rounded-full bg-[var(--terra)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white">Rush active · +35%</span>}
                   </span>
                   <span className="mt-1 block text-[12.5px] leading-5 text-[oklch(0.5_0.02_35)]">
                     Rush kitchen priority can open limited dates inside the usual five-day lead time. A clearly shown 35% rush fee applies and is itemized in your total.
@@ -335,14 +335,14 @@ export default function CustomOrder() {
                 title="Choose an available date"
                 helper={rush ? "Rush dates may be available from tomorrow." : "Custom cakes need five full days’ notice. Max 3 per day."}
               />
-              <div className="mt-6 overflow-hidden border border-[oklch(0.86_0.02_52)] bg-white shadow-[0_10px_30px_oklch(0.25_0.018_35/0.04)]">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[oklch(0.91_0.015_52)] bg-[oklch(0.97_0.008_72)] px-3 py-3 sm:px-4 sm:py-3.5">
-                  <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold tracking-[-0.01em]">
-                    <CalendarDays size={15} strokeWidth={1.9} className="text-[var(--rosewood)]" /> Kitchen availability
-                    <span className="hidden text-[11px] font-normal text-[oklch(0.52_0.02_35)] min-[360px]:inline">· {monthLabel}</span>
+              <div className="mt-6 overflow-hidden rounded-[1.5rem] border-[1.5px] border-[oklch(0.89_0.025_62)] bg-white shadow-[0_14px_40px_oklch(0.305_0.033_42/0.06)]">
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-[var(--cream)] px-4 py-3.5 sm:px-5">
+                  <span className="inline-flex items-center gap-2 text-[13px] font-extrabold tracking-[-0.005em]">
+                    <CalendarDays size={16} strokeWidth={2} className="text-[var(--terra)]" /> Kitchen availability
+                    <span className="hidden text-[12px] font-semibold text-[var(--ink-mute)] min-[360px]:inline">· {monthLabel}</span>
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-[0.11em] text-[oklch(0.52_0.02_35)]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Max 3 per day
+                  <span className="inline-flex items-center gap-1.5 text-[10.5px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink-mute)]">
+                    <span className="h-2 w-2 rounded-full bg-[var(--sage-deep)]" /> Max 3 per day
                   </span>
                 </div>
                 <div className="calendar-seven border-b border-[oklch(0.91_0.015_52)] bg-white">
@@ -374,15 +374,15 @@ export default function CustomOrder() {
                         onClick={() => setSelectedDate(key)}
                         aria-pressed={active}
                         aria-label={`${formatLongDate(key)} — ${capacityLabel}`}
-                        className={`relative flex aspect-square flex-col items-center justify-center border-b border-r p-0.5 sm:p-1 text-center transition-all duration-150 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-[var(--rosewood)] focus-visible:ring-inset
-                          ${disabled ? "cursor-not-allowed bg-[oklch(0.97_0.008_72)] text-[oklch(0.72_0.015_52)]" : active ? "z-[1] bg-[var(--rosewood)] text-white shadow-[inset_0_0_0_1px_oklch(0.44_0.09_18)]" : "bg-white text-[oklch(0.28_0.02_35)] hover:bg-[oklch(0.94_0.03_13)] hover:text-[var(--ink)]"}`}
+                        className={`relative flex aspect-square flex-col items-center justify-center border-b border-r border-[oklch(0.93_0.015_65)] p-0.5 sm:p-1 text-center transition-all duration-150 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-[var(--terra)] focus-visible:ring-inset
+                          ${disabled ? "cursor-not-allowed bg-[oklch(0.96_0.01_72)] text-[oklch(0.72_0.02_58)]" : active ? "z-[1] bg-[var(--terra)] text-white" : "bg-white text-[oklch(0.3_0.03_42)] hover:bg-[var(--blush)]/60 hover:text-[var(--ink)]"}`}
                       >
-                        <span className={`text-[12px] sm:text-[13px] font-semibold leading-none ${isToday && !disabled && !active ? "rounded-full bg-[oklch(0.94_0.03_13)] px-1 sm:px-1.5 py-0.5 sm:py-1 ring-1 ring-[var(--rosewood)]/25" : ""}`}>
+                        <span className={`text-[12px] sm:text-[13px] font-bold leading-none ${isToday && !disabled && !active ? "rounded-full bg-[var(--blush)] px-1 sm:px-1.5 py-0.5 sm:py-1 ring-1 ring-[var(--terra)]/30" : ""}`}>
                           {day.getDate()}
                         </span>
                         <span
-                          className={`mt-0.5 sm:mt-1 max-w-full truncate rounded-full px-1 sm:px-1.5 py-0.5 text-[7px] min-[360px]:text-[8px] font-bold uppercase tracking-[0.04em] sm:tracking-[0.07em] leading-none ${
-                            active ? "bg-white/15 text-white" : disabled ? "bg-transparent text-[oklch(0.66_0.015_52)]" : capacityLabel === "2 left" ? "bg-amber-500/12 text-amber-900" : capacityLabel === "Open" ? "bg-emerald-500/10 text-emerald-900" : "bg-transparent"
+                          className={`mt-0.5 sm:mt-1 max-w-full truncate rounded-full px-1 sm:px-1.5 py-0.5 text-[7px] min-[360px]:text-[8px] font-extrabold uppercase tracking-[0.04em] sm:tracking-[0.07em] leading-none ${
+                            active ? "bg-white/20 text-white" : disabled ? "bg-transparent text-[oklch(0.68_0.02_58)]" : capacityLabel === "2 left" ? "bg-[var(--butter)]/50 text-[oklch(0.45_0.07_70)]" : capacityLabel === "Open" ? "bg-[var(--sage-soft)] text-[var(--sage-deep)]" : "bg-transparent"
                           }`}
                         >
                           <span className="hidden min-[380px]:inline">{isFull ? "Full" : blockedByLead ? "Lead" : capacityLabel}</span>
@@ -393,17 +393,17 @@ export default function CustomOrder() {
                     );
                   })}
                 </div>
-                <div className="flex flex-wrap gap-3 border-t border-[oklch(0.91_0.015_52)] bg-[oklch(0.97_0.008_72)] px-4 py-3 text-[11px] leading-5">
-                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Open</span>
-                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> 2 left</span>
-                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[oklch(0.72_0.015_52)]" /> Full / Lead time</span>
-                  <span className="ml-auto hidden items-center gap-1.5 font-medium text-[oklch(0.52_0.02_35)] sm:inline-flex"><Info size={12} /> Dates update live</span>
+                <div className="flex flex-wrap gap-3 bg-[var(--cream)] px-4 py-3 text-[11.5px] font-semibold leading-5 sm:px-5">
+                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--sage-deep)]" /> Open</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--butter-deep)]" /> 2 left</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[oklch(0.76_0.02_60)]" /> Full / Lead time</span>
+                  <span className="ml-auto hidden items-center gap-1.5 font-bold text-[var(--ink-mute)] sm:inline-flex"><Info size={12} /> Dates update live</span>
                 </div>
               </div>
-              <p className="mt-3 flex items-center gap-2 text-[12.5px] leading-5 text-[oklch(0.46_0.02_35)]">
-                <span className="grid h-5 w-5 place-items-center rounded-full bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]"><CalendarDays size={12} strokeWidth={2} /></span>
-                <span className="font-medium">{formatLongDate(selectedDate)}</span>
-                <span className="hidden text-[oklch(0.58_0.03_35)] sm:inline">· {selectedDate ? "Your kitchen hold" : "Pick a day to see pricing"}</span>
+              <p className="mt-3 flex items-center gap-2 text-[13px] leading-5 text-[var(--ink-soft)]">
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--blush)] text-[var(--terra)]"><CalendarDays size={13} strokeWidth={2.1} /></span>
+                <span className="font-extrabold">{formatLongDate(selectedDate)}</span>
+                <span className="hidden font-semibold text-[var(--ink-mute)] sm:inline">· {selectedDate ? "Your kitchen hold" : "Pick a day to see pricing"}</span>
               </p>
             </section>
 
@@ -530,9 +530,9 @@ export default function CustomOrder() {
               <div className="mt-3 flex items-center justify-center gap-2 text-[11px] leading-4 text-[oklch(0.52_0.02_35)]">
                 <ShieldCheck size={12} className="text-[var(--rosewood)]" /> No payment collected in this demo
               </div>
-              <div className="mt-4 border border-dashed border-[oklch(0.86_0.02_52)] bg-[oklch(0.97_0.008_72)] p-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[oklch(0.52_0.02_35)]">What happens next?</p>
-                <p className="mt-1 text-[12px] leading-5 text-[oklch(0.46_0.02_35)]">We’ll review your details and hold the date while we confirm. You’ll get a deposit link and balance reminder by email.</p>
+              <div className="mt-4 rounded-2xl border-[1.5px] border-dashed border-[oklch(0.85_0.035_58)] bg-[var(--cream)] p-4">
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink-soft)]">What happens next?</p>
+                <p className="mt-1.5 text-[12.5px] leading-5 text-[var(--ink-mute)]">We’ll review your details and hold the date while we confirm. You’ll get a deposit link and balance reminder by email.</p>
               </div>
             </div>
           </aside>
@@ -664,22 +664,22 @@ function QuoteCard({
 }) {
   return (
     <div
-      className={`border bg-white ${compact ? "border-[oklch(0.86_0.02_52)] p-4 sm:p-5" : "border-[oklch(0.86_0.02_52)] p-5 sm:p-6 shadow-[0_18px_50px_oklch(0.25_0.018_35/0.07)]"}`}
+      className={`bg-[var(--paper)] ${compact ? "rounded-[1.5rem] border-[1.5px] border-[oklch(0.89_0.025_62)] p-4 sm:p-5" : "rounded-[1.75rem] p-5 shadow-[0_24px_70px_oklch(0.305_0.033_42/0.08)] sm:p-7"}`}
       aria-live="polite"
       aria-atomic="true"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="eyebrow">Your live estimate</p>
-          <h2 className="mt-1.5 font-display text-[24px] sm:text-[26px] leading-none tracking-[-0.02em] sm:text-[28px]">The cake table</h2>
-          <p className="mt-1 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">Updates instantly as you choose</p>
+          <h2 className="mt-2 font-display text-[25px] sm:text-[27px] font-semibold leading-none tracking-[-0.015em]">The cake table</h2>
+          <p className="mt-1.5 text-[11.5px] font-semibold leading-4 text-[var(--ink-mute)]">Updates instantly as you choose</p>
         </div>
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[oklch(0.88_0.06_18/0.35)] bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]" aria-hidden>
-          <Sparkles size={16} strokeWidth={1.9} />
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--butter-soft)] text-[var(--butter-deep)]" aria-hidden>
+          <Sparkles size={17} strokeWidth={2} />
         </span>
       </div>
 
-      <div className="mt-5 space-y-2.5 border-y border-[oklch(0.91_0.015_52)] py-4">
+      <div className="mt-5 space-y-2.5 border-y border-[oklch(0.9_0.022_65)] py-4">
         {lineItems.map((item) => (
           <div key={`${item.label}-${item.price}`} className="flex items-start justify-between gap-3 text-[12.5px] sm:text-[13px]">
             <span className="leading-5 text-[oklch(0.42_0.02_35)] truncate">{item.label}</span>
@@ -696,18 +696,18 @@ function QuoteCard({
       </div>
       <p className="mt-1 text-right text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">50% deposit holds your date</p>
 
-      <div className="mt-4 border-t border-[oklch(0.91_0.015_52)] pt-4">
-        <p className="text-[10px] font-bold uppercase tracking-[0.13em] text-[var(--rosewood)]">Reservation payment</p>
+      <div className="mt-4 border-t border-[oklch(0.9_0.022_65)] pt-4">
+        <p className="text-[11px] font-extrabold uppercase tracking-[0.13em] text-[var(--terra)]">Reservation payment</p>
         <div className="mt-3 grid grid-cols-1 min-[340px]:grid-cols-2 gap-2.5 sm:gap-3">
-          <div className="border border-[var(--rosewood)]/20 bg-[oklch(0.94_0.03_13)] p-3">
-            <p className="text-[9px] font-bold uppercase tracking-[0.11em] text-[oklch(0.52_0.03_18)]">Deposit due now</p>
-            <p className="mt-1 font-display text-[22px] leading-none tracking-[-0.02em]">{currency(deposit)}</p>
-            <p className="mt-1 text-[10px] leading-3 text-[oklch(0.52_0.02_35)]">Holds ingredients &amp; time</p>
+          <div className="rounded-2xl bg-[var(--blush)] p-3.5">
+            <p className="text-[9.5px] font-extrabold uppercase tracking-[0.11em] text-[oklch(0.45_0.08_20)]">Deposit due now</p>
+            <p className="mt-1 font-display text-[22px] font-semibold leading-none tracking-[-0.01em]">{currency(deposit)}</p>
+            <p className="mt-1 text-[10.5px] leading-3 text-[oklch(0.45_0.05_28)]">Holds ingredients &amp; time</p>
           </div>
-          <div className="border border-[oklch(0.86_0.02_52)] bg-[oklch(0.97_0.008_72)] p-3">
-            <p className="text-[9px] font-bold uppercase tracking-[0.11em] text-[oklch(0.52_0.02_35)]">Balance due</p>
-            <p className="mt-1 font-display text-[22px] leading-none tracking-[-0.02em]">{currency(balance)}</p>
-            <p className="mt-1 text-[10px] leading-3 text-[oklch(0.58_0.03_18)]">3 days before pickup</p>
+          <div className="rounded-2xl bg-[var(--cream)] p-3.5">
+            <p className="text-[9.5px] font-extrabold uppercase tracking-[0.11em] text-[var(--ink-mute)]">Balance due</p>
+            <p className="mt-1 font-display text-[22px] font-semibold leading-none tracking-[-0.01em]">{currency(balance)}</p>
+            <p className="mt-1 text-[10.5px] leading-3 text-[var(--ink-mute)]">3 days before pickup</p>
           </div>
         </div>
       </div>
@@ -750,53 +750,53 @@ function Confirmation({
   const noun =
     product === "cupcakes" ? "cupcake order" : product === "cookies" ? "cookie order" : product === "custom" ? "custom consultation" : "celebration cake";
   return (
-    <div className="min-h-screen bg-[oklch(0.974_0.008_75)] text-[var(--ink)]">
+    <div className="min-h-screen bg-[var(--cream)] text-[var(--ink)]">
       <SiteHeader />
       <main className="container py-10 sm:py-16">
-        <div className="mx-auto max-w-[720px] border border-[oklch(0.86_0.02_52)] bg-white p-6 shadow-[0_24px_70px_oklch(0.25_0.018_35/0.08)] sm:p-10 lg:p-12">
-          <span className="bloom mx-auto grid h-14 w-14 place-items-center rounded-full border border-[oklch(0.88_0.06_18/0.5)] bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)] ring-1 ring-[var(--rosewood)]/15">
-            <Check size={28} strokeWidth={2.2} />
+        <div className="paper-texture relative mx-auto max-w-[720px] overflow-hidden rounded-[2rem] bg-[var(--paper)] p-6 shadow-[0_24px_70px_oklch(0.305_0.033_42/0.08)] sm:p-10 lg:p-12">
+          <span className="bloom mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--blush)] text-[var(--terra)]">
+            <Check size={30} strokeWidth={2.4} />
           </span>
           <div className="mt-6 text-center">
             <p className="eyebrow justify-center">Order summary</p>
-            <h1 className="display-title mx-auto mt-3 max-w-[12ch] text-[46px] sm:text-[60px] lg:text-[68px]">
+            <h1 className="display-title mx-auto mt-3 max-w-[12ch] text-[48px] sm:text-[62px] lg:text-[70px]">
               Your date is <em>held.</em>
             </h1>
-            <p className="prose-measure mx-auto mt-4 max-w-[46ch] text-[14px] leading-6 text-[oklch(0.46_0.02_35)]">
+            <p className="prose-measure mx-auto mt-4 max-w-[46ch] text-[14.5px] leading-7 text-[var(--ink-soft)]">
               This demo confirmation shows exactly what the customer sees after review. In a live bakery system, the deposit action would connect here and the balance reminder would be scheduled.
             </p>
           </div>
 
-          <div className="mt-8 grid gap-4 border-y border-[oklch(0.91_0.015_52)] py-6 sm:grid-cols-3 sm:gap-6">
+          <div className="mt-8 grid gap-4 rounded-2xl bg-[var(--cream)] p-5 sm:grid-cols-3 sm:gap-6 sm:p-6">
             <SummaryBlock label="Order" value={noun} />
             <SummaryBlock label="Date" value={formatLongDate(selectedDate)} />
             <SummaryBlock label="Fulfillment" value={fulfillment === "delivery" ? "Local delivery · $18" : "Studio pickup · Portland"} />
           </div>
 
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            <div className="border border-[oklch(0.86_0.02_52)] bg-[oklch(0.97_0.008_72)] p-4">
-              <p className="text-[9px] font-bold uppercase tracking-[0.11em] text-[var(--rosewood)]">Order total</p>
-              <p className="mt-1.5 font-display text-[28px] leading-none tracking-[-0.02em]">{currency(total)}</p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-[var(--cream)] p-4">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.11em] text-[var(--ink-mute)]">Order total</p>
+              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(total)}</p>
             </div>
-            <div className="border border-[var(--rosewood)] bg-[oklch(0.94_0.03_13)] p-4 shadow-[inset_0_0_0_1px_var(--rosewood)]">
-              <p className="text-[9px] font-bold uppercase tracking-[0.11em] text-[oklch(0.48_0.06_18)]">Deposit due now</p>
-              <p className="mt-1.5 font-display text-[28px] leading-none tracking-[-0.02em]">{currency(deposit)}</p>
-              <p className="mt-1 text-[11px] leading-4 text-[oklch(0.52_0.02_35)]">Holds your date</p>
+            <div className="rounded-2xl bg-[var(--blush)] p-4">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.11em] text-[oklch(0.45_0.08_20)]">Deposit due now</p>
+              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(deposit)}</p>
+              <p className="mt-1.5 text-[11.5px] leading-4 text-[oklch(0.45_0.05_28)]">Holds your date</p>
             </div>
-            <div className="border border-[oklch(0.86_0.02_52)] bg-white p-4">
-              <p className="text-[9px] font-bold uppercase tracking-[0.11em] text-[oklch(0.52_0.02_35)]">Balance due</p>
-              <p className="mt-1.5 font-display text-[28px] leading-none tracking-[-0.02em]">{currency(balance)}</p>
-              <p className="mt-1 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">by {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(balanceDue)}</p>
+            <div className="rounded-2xl bg-[var(--cream)] p-4">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.11em] text-[var(--ink-mute)]">Balance due</p>
+              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(balance)}</p>
+              <p className="mt-1.5 text-[11.5px] leading-4 text-[var(--ink-mute)]">by {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(balanceDue)}</p>
             </div>
           </div>
 
-          <div className="mt-6 flex gap-3 border border-dashed border-[oklch(0.86_0.02_52)] bg-[oklch(0.97_0.008_72)] p-4">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]" aria-hidden>
-              <Clock3 size={14} strokeWidth={1.9} />
+          <div className="mt-6 flex gap-3 rounded-2xl bg-[var(--butter-soft)]/60 p-4">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[var(--butter-deep)]" aria-hidden>
+              <Clock3 size={15} strokeWidth={2} />
             </span>
             <div>
-              <p className="text-[12px] font-semibold leading-5">Automated balance reminder</p>
-              <p className="mt-1 max-w-[48ch] text-[12.5px] leading-5 text-[oklch(0.5_0.02_35)]">
+              <p className="text-[13px] font-extrabold leading-5">Automated balance reminder</p>
+              <p className="mt-1 max-w-[48ch] text-[12.5px] leading-5 text-[var(--ink-mute)]">
                 We’ll email a friendly reminder three days before your pickup with the remaining balance and pickup window. No surprises.
               </p>
             </div>
@@ -820,9 +820,9 @@ function Confirmation({
 
 function SummaryBlock({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 border-l-2 border-[oklch(0.91_0.015_52)] pl-3 sm:border-l-0 sm:border-t-2 sm:pl-0 sm:pt-3">
-      <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-[oklch(0.58_0.03_35)]">{label}</p>
-      <p className="mt-1 text-[13px] font-medium leading-5 text-[oklch(0.28_0.02_35)] text-balance">{value}</p>
+    <div className="min-w-0 border-t-2 border-[oklch(0.87_0.03_60)] pt-3 first:border-t-0 first:pt-0 sm:border-t-2 sm:first:border-t-2 sm:first:pt-3">
+      <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[var(--terra)]">{label}</p>
+      <p className="mt-1 text-[13.5px] font-bold leading-5 text-[var(--ink)] text-balance">{value}</p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Sparkles, ArrowRight, ArrowLeftRight, Check } from "lucide-react";
+import { ArrowRight, ArrowLeftRight } from "lucide-react";
 import { Link } from "wouter";
 import { withBase } from "@/lib/withBase";
 
@@ -35,58 +35,40 @@ export function FinishComparisonSlider() {
     }
   };
 
+  const preset = (pos: number, label: string, isActive: boolean) => (
+    <button
+      onClick={() => setSliderPos(pos)}
+      className={`rounded-full px-4 py-2 text-[12.5px] font-extrabold transition-colors ${
+        isActive ? "bg-[var(--terra)] text-white" : "bg-[var(--cream)] text-[var(--ink-soft)] hover:bg-[var(--blush)] hover:text-[var(--terra)]"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div
       data-reveal="up"
-      className="border border-[oklch(0.88_0.018_52)] bg-white p-6 sm:p-8 lg:p-10 shadow-[0_16px_48px_oklch(0.25_0.018_35/0.06)]"
+      className="rounded-[2rem] bg-[var(--paper)] p-6 shadow-[0_20px_60px_oklch(0.305_0.033_42/0.07)] sm:p-9 lg:p-11"
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[oklch(0.91_0.015_52)] pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-7">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[var(--rosewood)]" />
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--rosewood)]">
-              Craftsmanship &amp; Finishes
-            </p>
-          </div>
-          <h3 className="mt-1 font-display text-[26px] sm:text-[32px] font-medium leading-none tracking-[-0.02em]">
-            Compare Buttercream Finishes
+          <p className="eyebrow">Craftsmanship &amp; finishes</p>
+          <h3 className="mt-2 font-display text-[27px] sm:text-[33px] font-semibold leading-none tracking-[-0.015em]">
+            Compare buttercream finishes
           </h3>
-          <p className="mt-2 text-[13px] text-[oklch(0.48_0.02_35)] max-w-[56ch]">
-            Drag the divider to explore the texture difference between our minimal smooth finish and hand-textured garden buttercream.
+          <p className="mt-2.5 max-w-[56ch] text-[13.5px] leading-5 text-[var(--ink-mute)]">
+            Drag the divider to feel the difference between our satin-smooth finish and hand-textured garden buttercream.
           </p>
         </div>
-
-        {/* Quick presets */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setSliderPos(15)}
-            className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] rounded-full border transition-colors ${
-              sliderPos < 30 ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white" : "border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)]"
-            }`}
-          >
-            Smooth (+$0)
-          </button>
-          <button
-            onClick={() => setSliderPos(50)}
-            className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] rounded-full border transition-colors ${
-              sliderPos >= 30 && sliderPos <= 70 ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white" : "border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)]"
-            }`}
-          >
-            50 / 50
-          </button>
-          <button
-            onClick={() => setSliderPos(85)}
-            className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] rounded-full border transition-colors ${
-              sliderPos > 70 ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white" : "border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)]"
-            }`}
-          >
-            Textured (+$42)
-          </button>
+          {preset(15, "Smooth +$0", sliderPos < 30)}
+          {preset(50, "50 / 50", sliderPos >= 30 && sliderPos <= 70)}
+          {preset(85, "Textured +$42", sliderPos > 70)}
         </div>
       </div>
 
-      {/* Comparison Slider Workspace */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_.7fr] items-start">
+      <div className="grid items-start gap-7 lg:grid-cols-[1.3fr_.7fr]">
         <div
           ref={containerRef}
           onMouseDown={() => setIsDragging(true)}
@@ -101,25 +83,19 @@ export function FinishComparisonSlider() {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Comparison slider between smooth buttercream and textured floral finish. Use left and right arrow keys to adjust."
-          className="relative aspect-[1.3] sm:aspect-[1.5] w-full overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)] cursor-ew-resize select-none focus:outline-none focus:ring-2 focus:ring-[var(--rosewood)] focus:ring-offset-2"
+          className="relative aspect-[1.3] w-full cursor-ew-resize select-none overflow-hidden rounded-[1.4rem] bg-[oklch(0.94_0.014_75)] focus:outline-none focus:ring-2 focus:ring-[var(--terra)] focus:ring-offset-2 sm:aspect-[1.5]"
         >
-          {/* Base Layer: Textured Floral */}
           <img
             src={imgTextured}
             alt="Hand-textured buttercream cake with fresh garden flowers"
-            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
             loading="lazy"
           />
-
-          {/* Top Layer: Smooth Minimal, clipped via sliderPos */}
-          <div
-            className="absolute inset-0 overflow-hidden pointer-events-none"
-            style={{ width: `${sliderPos}%` }}
-          >
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
             <img
               src={imgSmooth}
               alt="Smooth classic frosted cake on porcelain stand"
-              className="absolute inset-0 h-full w-full object-cover max-w-none pointer-events-none"
+              className="pointer-events-none absolute inset-0 h-full w-full max-w-none object-cover"
               style={{
                 width: containerRef.current ? `${containerRef.current.clientWidth}px` : "100%",
                 height: "100%",
@@ -128,72 +104,47 @@ export function FinishComparisonSlider() {
             />
           </div>
 
-          {/* Dividing Bar & Handle */}
-          <div
-            className="absolute top-0 bottom-0 z-20 w-[2px] bg-white pointer-events-none shadow-[0_0_12px_rgba(0,0,0,0.35)]"
-            style={{ left: `${sliderPos}%` }}
-          >
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 grid h-10 w-10 place-items-center rounded-full border border-[var(--rosewood)] bg-white text-[var(--rosewood)] shadow-[0_4px_16px_rgba(0,0,0,0.22)]">
-              <ArrowLeftRight size={16} strokeWidth={2.4} />
+          <div className="pointer-events-none absolute bottom-0 top-0 z-20 w-[3px] bg-white shadow-[0_0_14px_oklch(0.3_0.03_42/0.4)]" style={{ left: `${sliderPos}%` }}>
+            <div className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-[var(--terra)] shadow-[0_6px_20px_oklch(0.3_0.03_42/0.3)]">
+              <ArrowLeftRight size={17} strokeWidth={2.4} />
             </div>
           </div>
 
-          {/* Overlay Labels */}
-          <div className="absolute top-3 left-3 pointer-events-none rounded-full border border-black/15 bg-white/90 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--ink)] backdrop-blur-md">
-            Look A · Minimal Smooth
+          <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-white/90 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink)] backdrop-blur-sm">
+            Smooth silk
           </div>
-          <div className="absolute top-3 right-3 pointer-events-none rounded-full border border-black/15 bg-white/90 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--ink)] backdrop-blur-md">
-            Look B · Textured Garden
-          </div>
-
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none rounded-full bg-black/75 px-3 py-1 text-[10px] font-medium tracking-wide text-white backdrop-blur-sm">
-            Drag divider or tap presets · {Math.round(sliderPos)}%
+          <div className="pointer-events-none absolute right-4 top-4 rounded-full bg-white/90 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink)] backdrop-blur-sm">
+            Textured garden
           </div>
         </div>
 
-        {/* Informative Side Panel */}
-        <div className="flex flex-col justify-between h-full space-y-4">
+        <div className="flex h-full flex-col justify-between gap-4">
           <div className="space-y-3">
-            <div className="border border-[oklch(0.86_0.02_52)] bg-[oklch(0.985_0.006_75)] p-4">
+            <div className="rounded-2xl bg-[var(--cream)] p-5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[oklch(0.52_0.02_35)]">
-                  Option 01
-                </span>
-                <span className="text-[11px] font-semibold text-emerald-700">Included (+$0)</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[var(--ink-mute)]">Smooth silk</span>
+                <span className="text-[12px] font-extrabold text-[var(--sage-deep)]">Included</span>
               </div>
-              <p className="mt-1 font-display text-[18px] font-medium leading-tight">
-                Minimal Smooth Silk Finish
-              </p>
-              <p className="mt-1 text-[12px] leading-4 text-[oklch(0.48_0.02_35)]">
-                Calm, satin-smooth finish scraped flush to the sponge. Modern and quiet.
-              </p>
+              <p className="mt-1.5 font-display text-[18.5px] font-semibold leading-tight">Minimal Smooth Silk Finish</p>
+              <p className="mt-1 text-[12.5px] leading-4 text-[var(--ink-mute)]">Calm, satin-smooth finish scraped flush to the sponge. Modern and quiet.</p>
             </div>
 
-            <div className="border border-[var(--rosewood)]/30 bg-[oklch(0.94_0.03_13)] p-4">
+            <div className="rounded-2xl bg-[var(--blush)] p-5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--rosewood)]">
-                  Option 02
-                </span>
-                <span className="text-[11px] font-semibold text-[var(--rosewood)]">Floral Finish (+$42)</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-[oklch(0.45_0.08_20)]">Textured garden</span>
+                <span className="text-[12px] font-extrabold text-[var(--terra-deep)]">+$42</span>
               </div>
-              <p className="mt-1 font-display text-[18px] font-medium leading-tight">
-                Textured Buttercream &amp; Flora
-              </p>
-              <p className="mt-1 text-[12px] leading-4 text-[oklch(0.48_0.02_35)]">
-                Hand-whipped stucco texture with organic edible petals, stems, and seasonal garden blooms.
-              </p>
+              <p className="mt-1.5 font-display text-[18.5px] font-semibold leading-tight">Textured Buttercream &amp; Flora</p>
+              <p className="mt-1 text-[12.5px] leading-4 text-[oklch(0.42_0.045_30)]">Hand-whipped stucco texture with organic edible petals, stems, and seasonal garden blooms.</p>
             </div>
           </div>
 
-          <div className="pt-2 border-t border-[oklch(0.91_0.015_52)]">
-            <Link
-              href="/custom-order"
-              className="button-rose w-full justify-center min-h-[44px] text-[10px]"
-            >
-              Choose this finish in Studio <ArrowRight size={14} />
+          <div className="pt-1">
+            <Link href="/custom-order" className="button-rose w-full justify-center min-h-[46px]">
+              Choose this finish <ArrowRight size={15} />
             </Link>
-            <p className="mt-2 text-center text-[11px] text-[oklch(0.52_0.02_35)]">
-              Pricing updates automatically in Step 02 of the custom quote.
+            <p className="mt-2.5 text-center text-[12px] font-semibold text-[var(--ink-mute)]">
+              Pricing updates automatically in the live quote.
             </p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, Clock3, Check, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
+import { CalendarDays, ArrowRight, Clock3 } from "lucide-react";
 import { Link } from "wouter";
 
 const addDays = (d: Date, days: number) => {
@@ -24,24 +24,24 @@ export function LiveAvailabilityChecker() {
   const diffDays = Math.ceil((selectedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
   let status: "open" | "rush" | "limited" | "invalid" = "open";
-  let badgeColor = "bg-emerald-500 text-white";
-  let statusTitle = "Kitchen Open · Standard Lead Time";
+  let badgeClass = "bg-[var(--sage-soft)] text-[var(--sage-deep)]";
+  let statusTitle = "Kitchen open · standard lead time";
   let statusDesc = "Ample studio preparation time. Standard ingredients and flowers will be scheduled.";
 
   if (diffDays < 1) {
     status = "invalid";
-    badgeColor = "bg-gray-500 text-white";
+    badgeClass = "bg-[oklch(0.92_0.012_70)] text-[var(--ink-mute)]";
     statusTitle = "Date in the past";
     statusDesc = "Please pick an upcoming date for your celebration.";
   } else if (diffDays < 5) {
     status = "rush";
-    badgeColor = "bg-[var(--rosewood)] text-white";
-    statusTitle = "Rush Kitchen Hold · +35% Priority Fee";
+    badgeClass = "bg-[var(--blush)] text-[oklch(0.45_0.08_20)]";
+    statusTitle = "Rush kitchen hold · +35% priority fee";
     statusDesc = "Under our 5-day minimum lead time. Priority rush schedule required to secure early ingredients.";
   } else if (diffDays % 7 === 5 || diffDays % 7 === 6) {
     status = "limited";
-    badgeColor = "bg-amber-500 text-white";
-    statusTitle = "High Demand Weekend · 1 Spot Left";
+    badgeClass = "bg-[var(--butter-soft)] text-[oklch(0.5_0.08_75)]";
+    statusTitle = "High demand weekend · 1 spot left";
     statusDesc = "Saturday & Sunday pickup windows fill quickly. We recommend submitting your quote promptly.";
   }
 
@@ -55,29 +55,29 @@ export function LiveAvailabilityChecker() {
   return (
     <div
       data-reveal="up"
-      className="border border-[oklch(0.88_0.018_52)] bg-[oklch(0.985_0.006_75)] p-5 sm:p-6 lg:p-7 shadow-[0_8px_24px_oklch(0.25_0.018_35/0.04)]"
+      className="rounded-[1.75rem] bg-[var(--paper)] p-6 shadow-[0_14px_40px_oklch(0.305_0.033_42/0.06)]"
     >
-      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--rosewood)]">
-        <Clock3 size={13} />
-        <span>Live Kitchen Availability &amp; Lead-Time Status</span>
+      <div className="flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-[0.15em] text-[var(--terra)]">
+        <Clock3 size={14} />
+        <span>Live kitchen availability</span>
       </div>
 
-      <h4 className="mt-1 font-display text-[22px] sm:text-[26px] font-medium leading-tight">
-        Will your date work? Check in seconds.
+      <h4 className="mt-2 font-display text-[23px] sm:text-[26px] font-semibold leading-tight">
+        Will your date work? <em className="italic text-[var(--terra)]">Check in seconds.</em>
       </h4>
 
-      {/* Date Picker & Quick Presets */}
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-2 border border-[oklch(0.86_0.02_52)] bg-white px-3 py-2">
-          <CalendarDays size={16} className="text-[var(--rosewood)]" />
+        <label className="flex items-center gap-2 rounded-full border-[1.5px] border-[oklch(0.88_0.03_60)] bg-[var(--cream)] px-4 py-2.5">
+          <CalendarDays size={16} className="text-[var(--terra)]" />
           <input
             type="date"
             value={dateStr}
             min={toInputDate(today)}
             onChange={(e) => setDateStr(e.target.value)}
-            className="text-[13px] font-medium outline-none bg-transparent cursor-pointer text-[var(--ink)]"
+            className="bg-transparent text-[13px] font-bold outline-none text-[var(--ink)]"
+            aria-label="Choose a date"
           />
-        </div>
+        </label>
 
         <div className="flex flex-wrap items-center gap-1.5">
           {presets.map((p) => {
@@ -87,40 +87,37 @@ export function LiveAvailabilityChecker() {
               <button
                 key={p.label}
                 onClick={() => setDateStr(toInputDate(pDate))}
-                className={`px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] rounded-full border transition-colors ${
+                className={`rounded-full px-3.5 py-2 text-[12px] font-extrabold transition-colors ${
                   isSelected
-                    ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white"
-                    : "border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)] hover:border-[oklch(0.72_0.03_18)]"
+                    ? "bg-[var(--terra)] text-white"
+                    : "bg-[var(--cream)] text-[var(--ink-soft)] hover:bg-[var(--blush)] hover:text-[var(--terra)]"
                 }`}
               >
-                {p.label} ({formatDate(pDate)})
+                {p.label}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Status Output Indicator */}
-      <div className="mt-4 border border-[oklch(0.86_0.02_52)] bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[0.14em] ${badgeColor}`}>
-              {status === "open" ? "Available" : status === "rush" ? "Rush Window" : status === "limited" ? "Limited Spots" : "Date Past"}
+      <div className="mt-4 flex flex-col items-start justify-between gap-4 rounded-2xl bg-[var(--cream)] p-4 sm:flex-row sm:items-center">
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`rounded-full px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-[0.13em] ${badgeClass}`}>
+              {status === "open" ? "Available" : status === "rush" ? "Rush window" : status === "limited" ? "Limited spots" : "Date past"}
             </span>
-            <span className="text-[13px] font-semibold text-[var(--ink)]">
-              {statusTitle}
-            </span>
+            <span className="text-[13.5px] font-extrabold text-[var(--ink)]">{statusTitle}</span>
           </div>
-          <p className="text-[12px] leading-4 text-[oklch(0.52_0.02_35)] max-w-[50ch]">
-            {statusDesc} · {diffDays > 0 ? `${diffDays} days advance notice.` : ""}
+          <p className="max-w-[50ch] text-[12.5px] leading-4 text-[var(--ink-mute)]">
+            {statusDesc} {diffDays > 0 ? `· ${diffDays} days advance notice.` : ""}
           </p>
         </div>
 
         <Link
           href="/custom-order"
-          className="button-rose min-h-[44px] px-5 text-[10px] whitespace-nowrap self-stretch sm:self-auto justify-center"
+          className="button-rose min-h-[44px] justify-center whitespace-nowrap self-stretch px-5 py-3 sm:self-auto"
         >
-          Hold this Date in Studio <ArrowRight size={13} />
+          Hold this date <ArrowRight size={14} />
         </Link>
       </div>
     </div>

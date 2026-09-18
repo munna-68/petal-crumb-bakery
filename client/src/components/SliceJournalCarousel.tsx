@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Play, Pause, ArrowUpRight, Sparkles, Heart } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Pause, ArrowUpRight, Heart, Quote } from "lucide-react";
 import { Link } from "wouter";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { withBase } from "@/lib/withBase";
+import { ScriptNote } from "@/components/decor";
 
 interface Slide {
   id: string;
@@ -88,58 +89,41 @@ export function SliceJournalCarousel() {
     };
   }, [isPlaying, current]);
 
+  const ctrl =
+    "grid h-10 w-10 place-items-center rounded-full bg-[var(--cream)] text-[var(--ink-soft)] transition-colors hover:bg-[var(--blush)] hover:text-[var(--terra)]";
+
   return (
     <div
       data-reveal="up"
-      className="border border-[oklch(0.88_0.018_52)] bg-white p-6 sm:p-8 lg:p-10 shadow-[0_16px_48px_oklch(0.25_0.018_35/0.06)]"
+      className="rounded-[2rem] bg-[var(--paper)] p-6 shadow-[0_20px_60px_oklch(0.305_0.033_42/0.07)] sm:p-9 lg:p-11"
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[oklch(0.91_0.015_52)] pb-5">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-7">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[var(--rosewood)]" />
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--rosewood)]">
-              Celebration Journal &amp; Stories
-            </p>
-          </div>
-          <h3 className="mt-1 font-display text-[26px] sm:text-[32px] font-medium leading-none tracking-[-0.02em]">
-            From the Cake Table
+          <p className="eyebrow">Celebration journal</p>
+          <h3 className="mt-2 font-display text-[27px] sm:text-[33px] font-semibold leading-none tracking-[-0.015em]">
+            From the cake table
           </h3>
         </div>
 
-        {/* Carousel controls */}
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[12px] font-semibold tracking-wider text-[oklch(0.48_0.02_35)] mr-2">
-            0{current + 1} / 0{total}
+          <span className="mr-1 text-[12.5px] font-extrabold tabular-nums text-[var(--ink-mute)]">
+            {String(current + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
           </span>
-          <button
-            onClick={() => setIsPlaying((p) => !p)}
-            aria-label={isPlaying ? "Pause carousel" : "Play carousel autoplay"}
-            className="grid h-9 w-9 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)] hover:border-[var(--rosewood)] hover:text-[var(--rosewood)]"
-          >
-            {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
+          <button onClick={() => setIsPlaying((p) => !p)} aria-label={isPlaying ? "Pause carousel" : "Play carousel autoplay"} className={ctrl}>
+            {isPlaying ? <Pause size={15} /> : <Play size={15} className="ml-0.5" />}
           </button>
-          <button
-            onClick={prev}
-            aria-label="Previous celebration story"
-            className="grid h-9 w-9 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)] hover:border-[var(--rosewood)] hover:text-[var(--rosewood)]"
-          >
-            <ChevronLeft size={16} />
+          <button onClick={prev} aria-label="Previous celebration story" className={ctrl}>
+            <ChevronLeft size={17} />
           </button>
-          <button
-            onClick={next}
-            aria-label="Next celebration story"
-            className="grid h-9 w-9 place-items-center rounded-full border border-[oklch(0.86_0.02_52)] bg-white text-[oklch(0.42_0.02_35)] hover:border-[var(--rosewood)] hover:text-[var(--rosewood)]"
-          >
-            <ChevronRight size={16} />
+          <button onClick={next} aria-label="Next celebration story" className={ctrl}>
+            <ChevronRight size={17} />
           </button>
         </div>
       </div>
 
-      {/* Slide Presentation */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.15fr] items-center">
-        {/* Slide Photo Tile */}
-        <div className="relative overflow-hidden border border-[oklch(0.88_0.018_52)] bg-[oklch(0.96_0.008_72)] p-2">
-          <div className="aspect-[1.1] overflow-hidden">
+      <div className="grid items-center gap-7 lg:grid-cols-[1fr_1.15fr]">
+        <div className="relative">
+          <div className="visual-tile aspect-[1.1]">
             <img
               key={slide.id}
               src={slide.image}
@@ -147,73 +131,68 @@ export function SliceJournalCarousel() {
               className="h-full w-full object-cover transition-opacity duration-500 animate-[fadeUp_300ms_cubic-bezier(0.16,1,0.3,1)]"
             />
           </div>
-          <div className="absolute top-4 left-4 border border-black/15 bg-white/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] backdrop-blur-md">
+          <p className="absolute left-4 top-4 rounded-full bg-white/90 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink)] backdrop-blur-sm">
             {slide.occasion}
-          </div>
+          </p>
           <button
             onClick={() => toggle(favKey, slide.title)}
             aria-label="Save this look"
-            className={`absolute top-4 right-4 grid h-8 w-8 place-items-center rounded-full border backdrop-blur-md transition-colors ${
-              isFav ? "border-[var(--rosewood)] bg-[var(--rosewood)] text-white" : "border-white/60 bg-white/80 text-[oklch(0.34_0.02_35)] hover:bg-white hover:text-[var(--rosewood)]"
+            className={`absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full transition-colors ${
+              isFav ? "bg-[var(--terra)] text-white" : "bg-white/90 text-[var(--ink-soft)] hover:bg-white hover:text-[var(--terra)]"
             }`}
           >
-            <Heart size={14} className={isFav ? "fill-white" : ""} />
+            <Heart size={15} className={isFav ? "fill-white" : ""} />
           </button>
         </div>
 
-        {/* Slide Content */}
         <div key={`content-${slide.id}`} className="space-y-4 animate-[fadeUp_300ms_cubic-bezier(0.16,1,0.3,1)]">
-          <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--rosewood)]">
+          <div className="flex flex-wrap items-center gap-2 text-[12px] font-extrabold uppercase tracking-[0.12em] text-[var(--terra)]">
             <span>{slide.host}</span>
-            <span className="h-1 w-1 rounded-full bg-[oklch(0.88_0.018_52)]" />
-            <span className="text-[oklch(0.52_0.02_35)]">{slide.date}</span>
+            <span className="h-1 w-1 rounded-full bg-[var(--hairline)]" />
+            <span className="text-[var(--ink-mute)]">{slide.date}</span>
           </div>
 
-          <h4 className="font-display text-[30px] sm:text-[36px] font-medium leading-none tracking-[-0.02em]">
+          <h4 className="font-display text-[31px] sm:text-[37px] font-semibold leading-none tracking-[-0.015em]">
             {slide.title}
           </h4>
 
-          <div className="space-y-1.5 border-y border-[oklch(0.91_0.015_52)] py-3 text-[12.5px]">
+          <div className="space-y-1.5 border-y border-[oklch(0.9_0.022_65)] py-3.5 text-[13px]">
             <p className="flex gap-2">
-              <span className="font-semibold text-[oklch(0.48_0.02_35)] uppercase tracking-wider text-[10px] shrink-0">Flavor:</span>
-              <span className="text-[var(--ink)] font-medium">{slide.flavor}</span>
+              <span className="shrink-0 text-[10.5px] font-extrabold uppercase tracking-[0.12em] leading-5 text-[var(--ink-mute)]">Flavor</span>
+              <span className="font-bold leading-5 text-[var(--ink)]">{slide.flavor}</span>
             </p>
             <p className="flex gap-2">
-              <span className="font-semibold text-[oklch(0.48_0.02_35)] uppercase tracking-wider text-[10px] shrink-0">Scale:</span>
-              <span className="text-[var(--ink)] font-medium">{slide.serves}</span>
+              <span className="shrink-0 text-[10.5px] font-extrabold uppercase tracking-[0.12em] leading-5 text-[var(--ink-mute)]">Scale</span>
+              <span className="font-bold leading-5 text-[var(--ink)]">{slide.serves}</span>
             </p>
           </div>
 
-          <blockquote className="font-display italic text-[17px] sm:text-[19px] leading-6 text-[oklch(0.34_0.02_35)] border-l-2 border-[var(--rosewood)] pl-4">
-            {slide.quote}
-          </blockquote>
+          <figure>
+            <Quote size={20} strokeWidth={2} className="rotate-180 text-[var(--terra)] opacity-70" aria-hidden />
+            <blockquote className="mt-2 font-display text-[18px] italic leading-relaxed text-[var(--ink-soft)]">
+              {slide.quote}
+            </blockquote>
+          </figure>
 
-          <div className="pt-2 flex flex-wrap gap-3">
-            <Link
-              href="/custom-order"
-              className="button-rose min-h-[44px] px-5 text-[10px]"
-            >
-              Recreate This Celebration in Studio <ArrowUpRight size={13} strokeWidth={2.4} />
+          <div className="flex flex-wrap gap-3 pt-1">
+            <Link href="/custom-order" className="button-rose min-h-[46px] px-5">
+              Recreate this <ArrowUpRight size={14} strokeWidth={2.4} />
             </Link>
-            <Link
-              href="/gallery"
-              className="button-ink min-h-[44px] px-5 text-[10px]"
-            >
-              See All in Gallery
+            <Link href="/gallery" className="button-ink min-h-[46px] px-5">
+              See all in gallery
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Dots navigation */}
-      <div className="mt-8 flex justify-center items-center gap-2">
+      <div className="mt-9 flex items-center justify-center gap-2">
         {slides.map((s, idx) => (
           <button
             key={s.id}
             onClick={() => setCurrent(idx)}
             aria-label={`Go to slide ${idx + 1}: ${s.title}`}
-            className={`h-2 transition-all rounded-full ${
-              current === idx ? "w-8 bg-[var(--rosewood)]" : "w-2 bg-[oklch(0.86_0.02_52)] hover:bg-[oklch(0.72_0.03_18)]"
+            className={`h-2 rounded-full transition-all ${
+              current === idx ? "w-8 bg-[var(--terra)]" : "w-2 bg-[oklch(0.86_0.03_60)] hover:bg-[oklch(0.76_0.05_50)]"
             }`}
           />
         ))}
