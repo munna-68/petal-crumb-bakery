@@ -16,7 +16,7 @@ import { CakeFinderQuiz } from "@/components/CakeFinderQuiz";
 import { FinishComparisonSlider } from "@/components/FinishComparisonSlider";
 import { SliceJournalCarousel } from "@/components/SliceJournalCarousel";
 import { LiveAvailabilityChecker } from "@/components/LiveAvailabilityChecker";
-import { HeartDoodle, SquiggleArrow, ButterBlob, LeafSprig, ScriptNote, SprigDivider } from "@/components/decor";
+import { HeartDoodle, ButterBlob, LeafSprig, ScriptNote, SprigDivider } from "@/components/decor";
 import { Flower2, CakeSlice } from "lucide-react";
 
 const heroCake = withBase("/images/photo-1578985545062-69928b1d9587.jpg");
@@ -39,9 +39,9 @@ export default function Home() {
             <LeafSprig className="drift absolute h-full w-full text-[var(--sage-deep)] opacity-70" />
           </div>
 
-          <div className="grid lg:grid-cols-[1.02fr_0.98fr] lg:min-h-[640px]">
+          <div className="container !px-0 grid lg:grid-cols-2 lg:min-h-[640px]">
             {/* copy */}
-            <div className="relative flex flex-col justify-center px-6 pb-12 pt-10 sm:px-10 sm:pb-16 sm:pt-14 lg:pl-[max(2.5rem,calc(50vw-640px+2.5rem))] lg:pr-14 lg:pt-16">
+            <div className="relative flex flex-col justify-center px-6 pb-12 pt-10 sm:px-10 sm:pb-16 sm:pt-14 lg:px-10 lg:pt-16">
               <div className="relative">
                 <HeartDoodle className="absolute -top-9 right-2 hidden h-14 w-14 rotate-12 text-[var(--terra)] opacity-60 sm:block" />
                 <p className="eyebrow">
@@ -73,11 +73,11 @@ export default function Home() {
             </div>
 
             {/* image — bleeds right, no frame */}
-            <div className="relative min-h-[380px] overflow-hidden sm:min-h-[460px] lg:min-h-full lg:rounded-bl-[2.5rem]">
+            <div className="relative min-h-[380px] overflow-hidden rounded-[2.5rem] sm:min-h-[460px] lg:min-h-full">
               <img
                 src={heroCake}
                 alt="Floral celebration cake with garden blooms on a linen-draped table"
-                className="parallax-hero h-full w-full object-cover object-[50%_38%] lg:object-center"
+                className="h-full w-full object-cover object-center"
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
@@ -85,7 +85,6 @@ export default function Home() {
               {/* script annotation */}
               <div className="absolute right-6 top-8 hidden flex-col items-end gap-1 text-[oklch(0.99_0.008_80)] drop-shadow-[0_2px_10px_oklch(0.3_0.03_42/0.5)] md:flex" aria-hidden>
                 <ScriptNote className="rotate-[-4deg]">Seasonal ingredients</ScriptNote>
-                <SquiggleArrow className="h-9 w-14 rotate-[8deg] opacity-90" />
               </div>
               {/* caption */}
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[oklch(0.3_0.03_42/0.5)] to-transparent p-6 pt-16">
