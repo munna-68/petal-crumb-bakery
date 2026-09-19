@@ -14,18 +14,23 @@ export function FinishComparisonSlider() {
   const handleMove = useCallback((clientX: number) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
+    if (rect.width === 0) return;
     const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
     const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
     setSliderPos(percent);
   }, []);
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (e.touches[0]) handleMove(e.touches[0].clientX);
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true);
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    handleMove(e.clientX);
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (isDragging) handleMove(e.clientX);
   };
+
+  const endDrag = () => setIsDragging(false);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowLeft") {
@@ -62,20 +67,20 @@ export function FinishComparisonSlider() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {preset(15, "Smooth +$0", sliderPos < 30)}
+          {preset(85, "Smooth +$0", sliderPos > 70)}
           {preset(50, "50 / 50", sliderPos >= 30 && sliderPos <= 70)}
-          {preset(85, "Textured +$42", sliderPos > 70)}
+          {preset(15, "Textured +$42", sliderPos < 30)}
         </div>
       </div>
 
       <div className="grid items-start gap-7 lg:grid-cols-[1.3fr_.7fr]">
         <div
           ref={containerRef}
-          onMouseDown={() => setIsDragging(true)}
-          onMouseUp={() => setIsDragging(false)}
-          onMouseLeave={() => setIsDragging(false)}
-          onMouseMove={handleMouseMove}
-          onTouchMove={handleTouchMove}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onPointerLeave={endDrag}
           onKeyDown={handleKeyDown}
           tabIndex={0}
           role="slider"
@@ -83,24 +88,29 @@ export function FinishComparisonSlider() {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Comparison slider between smooth buttercream and textured floral finish. Use left and right arrow keys to adjust."
-          className="relative aspect-[1.3] w-full cursor-ew-resize select-none overflow-hidden rounded-[1.4rem] bg-[oklch(0.94_0.014_75)] focus:outline-none focus:ring-2 focus:ring-[var(--terra)] focus:ring-offset-2 sm:aspect-[1.5]"
+          className="relative aspect-[1.3] w-full cursor-ew-resize select-none overflow-hidden rounded-[1.4rem] bg-[oklch(0.94_0.014_75)] touch-none focus:outline-none focus:ring-2 focus:ring-[var(--terra)] focus:ring-offset-2 sm:aspect-[1.5]"
         >
+          {/* Bottom layer: textured (after). Always full-size so geometry never shifts. */}
           <img
             src={imgTextured}
-            alt="Hand-textured buttercream cake with fresh garden flowers"
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+            alt="Chocolate drip cake finished with piped rosettes and chocolate shavings"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
             loading="lazy"
+            draggable={false}
           />
-          <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
+          {/* Top layer: smooth (before). Clipped with clip-path so it keeps the
+              exact same full-container geometry as the bottom layer — no width
+              measuring, no first-render squash, no jump on first drag. */}
+          <div
+            className="pointer-events-none absolute inset-0 overflow-hidden"
+            style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+          >
             <img
               src={imgSmooth}
-              alt="Smooth classic frosted cake on porcelain stand"
-              className="pointer-events-none absolute inset-0 h-full w-full max-w-none object-cover"
-              style={{
-                width: containerRef.current ? `${containerRef.current.clientWidth}px` : "100%",
-                height: "100%",
-              }}
+              alt="Same chocolate drip cake with a smooth ganache top and no rosettes"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
               loading="lazy"
+              draggable={false}
             />
           </div>
 
