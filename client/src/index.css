@@ -407,6 +407,19 @@ html.can-back-to-top .back-to-top {
 .bloom { animation: bloom 900ms cubic-bezier(0.16, 1, 0.3, 1) 1; }
 }
 
+/* — preloader: bloom → pop → curtain. Hold entrances behind the curtain — */
+html.is-loading { overflow: hidden; }
+html.is-loading .hero-line-inner {
+  animation: none !important;
+  opacity: 0;
+  transform: translateY(100%);
+}
+html.is-loading [data-reveal][data-revealed="true"] {
+  opacity: 0 !important;
+  transition: none !important;
+}
+#preloader { will-change: transform; }
+
 /* Prefer reduced motion: instant reveals, disable parallax and drift */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

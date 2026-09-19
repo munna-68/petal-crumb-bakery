@@ -32,7 +32,7 @@ import {
   ScriptNote,
   SprigDivider,
 } from "@/components/decor";
-import { Flower2, CakeSlice } from "lucide-react";
+import { Leaf, CakeSlice } from "lucide-react";
 
 const heroCake = withBase("/images/photo-1578985545062-69928b1d9587.jpg");
 
@@ -134,14 +134,14 @@ export default function Home() {
                 decoding="async"
                 fetchPriority="high"
               />
-              {/* script annotation */}
+              {/* serif-italic annotation, like the original studio mock */}
               <div
-                className="absolute right-6 top-8 hidden flex-col items-end gap-1 text-[oklch(0.99_0.008_80)] drop-shadow-[0_2px_10px_oklch(0.3_0.03_42/0.5)] md:flex"
+                className="absolute right-6 top-8 hidden pointer-events-none md:flex"
                 aria-hidden
               >
-                <ScriptNote className="rotate-[-4deg]">
+                <span className="font-display italic text-[var(--terra)]/80 text-[22px] leading-none rotate-3 drop-shadow-md">
                   Seasonal ingredients
-                </ScriptNote>
+                </span>
               </div>
               {/* caption */}
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[oklch(0.3_0.03_42/0.5)] to-transparent p-6 pt-16">
@@ -160,7 +160,7 @@ export default function Home() {
             <div className="grid flex-1 gap-6 sm:grid-cols-3 lg:grid-cols-3 lg:divide-x lg:divide-[oklch(0.89_0.025_62)]">
               {[
                 {
-                  icon: Flower2,
+                  icon: Leaf,
                   chip: "bg-[var(--blush)] text-[var(--terra)]",
                   label: "Seasonal ingredients",
                   note: "Fresh, local, always.",

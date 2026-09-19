@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch, Router as WouterRouter } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Preloader from "./components/Preloader";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
@@ -48,6 +49,7 @@ function App() {
           <FavoritesProvider>
             <TooltipProvider>
               <Toaster />
+              <Preloader />
               <WouterRouter base={routerBase}><AppRoutes /></WouterRouter>
             </TooltipProvider>
           </FavoritesProvider>
