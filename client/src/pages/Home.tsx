@@ -34,7 +34,7 @@ import {
 } from "@/components/decor";
 import { Leaf, CakeSlice } from "lucide-react";
 
-const heroCake = withBase("/images/photo-1578985545062-69928b1d9587.jpg");
+const heroCake = withBase("/images/hero-raspberry-garden-cake.png");
 
 export default function Home() {
   const { toggle, isFavorite } = useFavorites();

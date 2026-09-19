@@ -3,8 +3,8 @@ import { ArrowRight, ArrowLeftRight } from "lucide-react";
 import { Link } from "wouter";
 import { withBase } from "@/lib/withBase";
 
-const imgSmooth = withBase("/images/photo-1602351447937-745cb720612f.jpg");
-const imgTextured = withBase("/images/photo-1578985545062-69928b1d9587.jpg");
+const imgSmooth = withBase("/images/finish-smooth-silk.png");
+const imgTextured = withBase("/images/finish-textured-garden.png");
 
 export function FinishComparisonSlider() {
   const [sliderPos, setSliderPos] = useState(50);
