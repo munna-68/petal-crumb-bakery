@@ -18,6 +18,8 @@ import Contact from "./pages/Contact";
 const routerBase = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 
+import Dashboard from "./dashboard/Dashboard";
+
 function AppRoutes() {
   return (
     <Switch>
@@ -27,6 +29,16 @@ function AppRoutes() {
       <Route path={"/gallery"} component={Gallery} />
       <Route path={"/about"} component={About} />
       <Route path={"/contact"} component={Contact} />
+      <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/dashboard/orders"} component={Dashboard} />
+      <Route path={"/dashboard/bake"} component={Dashboard} />
+      <Route path={"/dashboard/menu"} component={Dashboard} />
+      <Route path={"/dashboard/inquiries"} component={Dashboard} />
+      <Route path={"/dashboard/insights"} component={Dashboard} />
+      <Route path={"/dashboard/customers"} component={Dashboard} />
+      <Route path={"/dashboard/money"} component={Dashboard} />
+      <Route path={"/dashboard/settings"} component={Dashboard} />
+      <Route path={"/dashboard/:tab*"} component={Dashboard} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
