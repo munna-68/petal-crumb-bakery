@@ -2,7 +2,7 @@
  * Quiet Patisserie Editorial — order studio
  * Calm, structured, live-quoted. Every choice shows price instantly.
  * Polished: editorial steppers, aligned calendar grid, hairline quote,
- * accessible fields, expo motion, and a single bloom delight on confirmation.
+ * accessible fields, expo motion, and real persistent bakery orders.
  */
 import { useEffect, useMemo, useState, useRef } from "react";
 import {
@@ -19,9 +19,15 @@ import {
   Truck,
   Info,
   ShieldCheck,
+  Printer,
+  PackageCheck,
+  Receipt,
+  RotateCcw,
 } from "lucide-react";
 import { Link } from "wouter";
+import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
+import { useBakeryStore, type BakeryOrder, type BakeryOrderItem } from "@/lib/bakeryStore";
 
 type ProductType = "cake" | "cupcakes" | "cookies" | "custom";
 type Fulfillment = "pickup" | "delivery";
@@ -102,6 +108,11 @@ function FieldLabel({ children, htmlFor, required }: { children: React.ReactNode
 }
 
 export default function CustomOrder() {
+  const { isDateAvailable, settings, addOrder } = useBakeryStore();
+
+  const rushFeePercentage = settings.rushFeePercentage || 35;
+  const deliveryFee = settings.deliveryFee || 18;
+
   const [product, setProduct] = useState<ProductType>("cake");
   const [cakeSize, setCakeSize] = useState<CakeSize>("8-inch");
   const [flavor, setFlavor] = useState("Vanilla bean");
@@ -116,6 +127,16 @@ export default function CustomOrder() {
   const [fileName, setFileName] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [stage, setStage] = useState<"build" | "confirmed">("build");
+  const [createdOrder, setCreatedOrder] = useState<BakeryOrder | null>(null);
+
+  // Customer contact fields
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [timeWindow, setTimeWindow] = useState("12:00 PM");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [specialNotes, setSpecialNotes] = useState("");
+
   const fileRef = useRef<HTMLInputElement>(null);
 
   const today = useMemo(() => {
@@ -123,26 +144,70 @@ export default function CustomOrder() {
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
-  const days = useMemo(() => Array.from({ length: 28 }, (_, i) => addDays(today, i + 1)), [today]);
-  const fullDates = useMemo(
-    () => new Set([toKey(addDays(today, 10)), toKey(addDays(today, 17)), toKey(addDays(today, 24))]),
-    [today]
-  );
-  const leadTime = rush ? 1 : 5;
-  const firstAvailable = useMemo(
-    () => days.find((day, idx) => idx + 1 >= leadTime && !fullDates.has(toKey(day))),
-    [days, fullDates, leadTime]
-  );
+
+  // 35 days (5 weeks) of calendar view
+  const days = useMemo(() => Array.from({ length: 35 }, (_, i) => addDays(today, i + 1)), [today]);
+
+  // Read URL Query params on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const dateParam = params.get("date");
+    const flavorParam = params.get("flavor");
+    const productParam = params.get("product") as ProductType | null;
+    const sizeParam = params.get("size") as CakeSize | null;
+
+    if (productParam && ["cake", "cupcakes", "cookies", "custom"].includes(productParam)) {
+      setProduct(productParam);
+    }
+    if (sizeParam && ["6-inch", "8-inch", "tiered"].includes(sizeParam)) {
+      setCakeSize(sizeParam);
+    }
+    if (flavorParam) {
+      setFlavor(flavorParam);
+    }
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      const avail = isDateAvailable(dateParam);
+      if (avail.available) {
+        setSelectedDate(dateParam);
+        if (avail.rush) {
+          setRush(true);
+        }
+      }
+    }
+  }, []);
+
+  // First available date calculation
+  const firstAvailable = useMemo(() => {
+    return days.find((day) => {
+      const key = toKey(day);
+      const avail = isDateAvailable(key);
+      return avail.available;
+    });
+  }, [days, isDateAvailable]);
 
   // align calendar to weekday grid — prepend blanks so first day lands correctly
   const firstWeekday = days[0]?.getDay() ?? 0; // 0 Sun
   const leadingBlanks = Array.from({ length: firstWeekday }, (_, i) => `blank-${i}`);
 
   useEffect(() => {
-    const current = days.find((d) => toKey(d) === selectedDate);
-    const invalid = !current || days.indexOf(current) + 1 < leadTime || fullDates.has(selectedDate);
-    if (invalid && firstAvailable) setSelectedDate(toKey(firstAvailable));
-  }, [firstAvailable, days, fullDates, leadTime, selectedDate]);
+    if (!selectedDate && firstAvailable) {
+      const k = toKey(firstAvailable);
+      setSelectedDate(k);
+      const avail = isDateAvailable(k);
+      if (avail.rush) setRush(true);
+    } else if (selectedDate) {
+      const current = days.find((d) => toKey(d) === selectedDate);
+      const avail = isDateAvailable(selectedDate);
+      if (!current || !avail.available) {
+        if (firstAvailable) {
+          const k = toKey(firstAvailable);
+          setSelectedDate(k);
+          if (isDateAvailable(k).rush) setRush(true);
+        }
+      }
+    }
+  }, [firstAvailable, days, selectedDate, isDateAvailable]);
 
   const lineItems = useMemo(() => {
     const items: { label: string; price: number }[] = [];
@@ -170,10 +235,10 @@ export default function CustomOrder() {
     }
     if (product === "custom") items.push({ label: "Custom cake consultation", price: 150 });
     const preRush = items.reduce((s, it) => s + it.price, 0);
-    if (rush) items.push({ label: "Rush kitchen priority", price: Math.ceil(preRush * 0.35) });
-    if (fulfillment === "delivery") items.push({ label: "Local delivery", price: 18 });
+    if (rush) items.push({ label: `Rush kitchen priority (+${rushFeePercentage}%)`, price: Math.ceil(preRush * (rushFeePercentage / 100)) });
+    if (fulfillment === "delivery") items.push({ label: "Local delivery", price: deliveryFee });
     return items;
-  }, [cakeSize, complexity, filling, flavor, frosting, fulfillment, packaging, product, quantity, rush]);
+  }, [cakeSize, complexity, filling, flavor, frosting, fulfillment, packaging, product, quantity, rush, rushFeePercentage, deliveryFee]);
 
   const total = lineItems.reduce((s, it) => s + it.price, 0);
   const deposit = Math.ceil(total / 2);
@@ -185,8 +250,104 @@ export default function CustomOrder() {
     if (type === "cupcakes" || type === "cookies") setQuantity(12);
   };
 
-  if (stage === "confirmed") {
-    return <Confirmation total={total} deposit={deposit} balance={balance} selectedDate={selectedDate} fulfillment={fulfillment} product={product} onEdit={() => setStage("build")} />;
+  const handleSelectDate = (key: string) => {
+    setSelectedDate(key);
+    const avail = isDateAvailable(key);
+    if (avail.available && avail.rush) {
+      setRush(true);
+    }
+  };
+
+  const handleSubmitOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerName.trim() || !customerEmail.trim()) {
+      toast.error("Please enter your name and email");
+      return;
+    }
+    if (fulfillment === "delivery" && !deliveryAddress.trim()) {
+      toast.error("Please provide a delivery address");
+      return;
+    }
+    if (!selectedDate) {
+      toast.error("Please choose a date from the calendar");
+      return;
+    }
+
+    // Build order items
+    const items: BakeryOrderItem[] = [];
+    if (product === "cake") {
+      items.push({
+        title: `${sizes[cakeSize].label} Celebration Cake`,
+        detail: `${flavor} sponge · ${filling} · ${frosting} (${complexity})`,
+        quantity: 1,
+        price: sizes[cakeSize].price,
+      });
+    } else if (product === "cupcakes") {
+      items.push({
+        title: `${quantity} Signature Cupcakes`,
+        detail: `${flavor} · Box of ${quantity}`,
+        quantity: 1,
+        price: quantity === 12 ? 42 : quantity === 24 ? 78 : 112,
+      });
+    } else if (product === "cookies") {
+      items.push({
+        title: `${quantity} Hand-Iced Botanical Cookies`,
+        detail: packaging,
+        quantity: 1,
+        price: (quantity === 12 ? 34 : quantity === 24 ? 64 : 90) + (packaging === "Gift-ready ribbon" ? 8 : 0),
+      });
+    } else {
+      items.push({
+        title: "Custom Studio Consultation",
+        detail: "60-minute in-studio or video concept & tasting consultation",
+        quantity: 1,
+        price: 150,
+      });
+    }
+
+    const newOrder = addOrder({
+      customer: {
+        name: customerName.trim(),
+        email: customerEmail.trim(),
+        phone: customerPhone.trim() || "(503) 555-0100",
+        address: fulfillment === "delivery" ? deliveryAddress.trim() : undefined,
+      },
+      type: product,
+      items,
+      cakeConfig: product === "cake" ? {
+        size: cakeSize,
+        flavor,
+        filling,
+        frosting,
+        complexity,
+      } : undefined,
+      fulfillment,
+      date: selectedDate,
+      timeWindow,
+      stage: "to-make",
+      payment: "deposit-paid",
+      paymentMethod: "card",
+      total,
+      deposit,
+      balance,
+      notes: specialNotes.trim(),
+      allergies,
+      inspirationPhoto: fileName || undefined,
+      source: "Custom Studio",
+    });
+
+    setCreatedOrder(newOrder);
+    setStage("confirmed");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (stage === "confirmed" && createdOrder) {
+    return (
+      <Confirmation
+        order={createdOrder}
+        onEdit={() => setStage("build")}
+      />
+    );
   }
 
   const monthLabel = formatShortMonth(days[0] ?? today);
@@ -203,7 +364,7 @@ export default function CustomOrder() {
         </Link>
 
         <div className="order-studio-grid mt-6 lg:mt-8">
-          <form onSubmit={(e) => { e.preventDefault(); setStage("confirmed"); }} className="min-w-0" noValidate>
+          <form onSubmit={handleSubmitOrder} className="min-w-0" noValidate>
             {/* header */}
             <div className="border-b border-[oklch(0.88_0.018_52)] pb-8">
               <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--rosewood)]">
@@ -218,7 +379,7 @@ export default function CustomOrder() {
                 <em>celebration.</em>
               </h1>
               <p className="prose-measure mt-4 max-w-[54ch] text-[14px] leading-6 text-[oklch(0.44_0.02_35)] sm:text-[15px] sm:leading-7">
-                Choose a few thoughtful details. Your quote updates as you go, so there are no mystery messages or spreadsheet surprises.
+                Choose a few thoughtful details. Your quote updates as you go, and your hold connects straight to the kitchen schedule.
               </p>
               {/* progress */}
               <div className="mt-6 flex items-center gap-2">
@@ -319,21 +480,21 @@ export default function CustomOrder() {
                 <span className="min-w-0">
                   <span className="flex flex-wrap items-center gap-2 text-[13.5px] font-extrabold leading-5">
                     <Clock3 size={15} strokeWidth={2} className="text-[var(--terra)]" /> Need it sooner?
-                    {rush && <span className="rounded-full bg-[var(--terra)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white">Rush active · +35%</span>}
+                    {rush && <span className="rounded-full bg-[var(--terra)] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-white">Rush active · +{rushFeePercentage}%</span>}
                   </span>
                   <span className="mt-1 block text-[12.5px] leading-5 text-[oklch(0.5_0.02_35)]">
-                    Rush kitchen priority can open limited dates inside the usual five-day lead time. A clearly shown 35% rush fee applies and is itemized in your total.
+                    Rush kitchen priority opens dates inside the standard {settings.standardLeadTimeDays}-day lead time (down to {settings.rushLeadTimeDays} days). A {rushFeePercentage}% priority rush fee applies.
                   </span>
                 </span>
               </button>
             </section>
 
-            {/* STEP 03 — calendar */}
+            {/* STEP 03 — live calendar */}
             <section className="border-b border-[oklch(0.88_0.018_52)] py-7 sm:py-8">
               <StepTitle
                 step="03"
                 title="Choose an available date"
-                helper={rush ? "Rush dates may be available from tomorrow." : "Custom cakes need five full days’ notice. Max 3 per day."}
+                helper={rush ? `Rush calendar active: dates open with ${settings.rushLeadTimeDays}+ days lead time.` : `Standard lead time: ${settings.standardLeadTimeDays} days advance notice. Max ${settings.maxOrdersPerDay} custom bakes per day.`}
               />
               <div className="mt-6 overflow-hidden rounded-[1.5rem] border-[1.5px] border-[oklch(0.89_0.025_62)] bg-white shadow-[0_14px_40px_oklch(0.305_0.033_42/0.06)]">
                 <div className="flex flex-wrap items-center justify-between gap-2 bg-[var(--cream)] px-4 py-3.5 sm:px-5">
@@ -342,7 +503,7 @@ export default function CustomOrder() {
                     <span className="hidden text-[12px] font-semibold text-[var(--ink-mute)] min-[360px]:inline">· {monthLabel}</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-[10.5px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink-mute)]">
-                    <span className="h-2 w-2 rounded-full bg-[var(--sage-deep)]" /> Max 3 per day
+                    <span className="h-2 w-2 rounded-full bg-[var(--sage-deep)]" /> Max {settings.maxOrdersPerDay} per day
                   </span>
                 </div>
                 <div className="calendar-seven border-b border-[oklch(0.91_0.015_52)] bg-white">
@@ -357,23 +518,36 @@ export default function CustomOrder() {
                   {leadingBlanks.map((k) => (
                     <span key={k} className="aspect-square border-b border-r border-[oklch(0.94_0.01_52)] bg-[oklch(0.98_0.005_75)]" aria-hidden />
                   ))}
-                  {days.map((day, idx) => {
+                  {days.map((day) => {
                     const key = toKey(day);
-                    const blockedByLead = idx + 1 < leadTime;
-                    const isFull = fullDates.has(key);
-                    const disabled = blockedByLead || isFull;
+                    const avail = isDateAvailable(key);
+                    const isBlackout = settings.blackoutDates.includes(key);
+                    const disabled = !avail.available;
                     const active = selectedDate === key;
                     const todayKey = toKey(today);
                     const isToday = key === todayKey;
-                    const capacityLabel = isFull ? "Full" : blockedByLead ? "Lead" : idx % 4 === 0 ? "2 left" : "Open";
+
+                    let capacityLabel = "Open";
+                    if (isBlackout) {
+                      capacityLabel = "Closed";
+                    } else if (!avail.available) {
+                      if (avail.remainingSpots === 0) capacityLabel = "Full";
+                      else capacityLabel = "Lead";
+                    } else if (avail.remainingSpots !== undefined && avail.remainingSpots <= 2) {
+                      capacityLabel = `${avail.remainingSpots} left`;
+                    } else if (avail.rush) {
+                      capacityLabel = "Rush";
+                    }
+
                     return (
                       <button
                         key={key}
                         type="button"
                         disabled={disabled}
-                        onClick={() => setSelectedDate(key)}
+                        onClick={() => handleSelectDate(key)}
                         aria-pressed={active}
-                        aria-label={`${formatLongDate(key)} — ${capacityLabel}`}
+                        aria-label={`${formatLongDate(key)} — ${capacityLabel} — ${avail.reason || ""}`}
+                        title={avail.reason || capacityLabel}
                         className={`relative flex aspect-square flex-col items-center justify-center border-b border-r border-[oklch(0.93_0.015_65)] p-0.5 sm:p-1 text-center transition-all duration-150 focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-[var(--terra)] focus-visible:ring-inset
                           ${disabled ? "cursor-not-allowed bg-[oklch(0.96_0.01_72)] text-[oklch(0.72_0.02_58)]" : active ? "z-[1] bg-[var(--terra)] text-white" : "bg-white text-[oklch(0.3_0.03_42)] hover:bg-[var(--blush)]/60 hover:text-[var(--ink)]"}`}
                       >
@@ -382,11 +556,19 @@ export default function CustomOrder() {
                         </span>
                         <span
                           className={`mt-0.5 sm:mt-1 max-w-full truncate rounded-full px-1 sm:px-1.5 py-0.5 text-[7px] min-[360px]:text-[8px] font-extrabold uppercase tracking-[0.04em] sm:tracking-[0.07em] leading-none ${
-                            active ? "bg-white/20 text-white" : disabled ? "bg-transparent text-[oklch(0.68_0.02_58)]" : capacityLabel === "2 left" ? "bg-[var(--butter)]/50 text-[oklch(0.45_0.07_70)]" : capacityLabel === "Open" ? "bg-[var(--sage-soft)] text-[var(--sage-deep)]" : "bg-transparent"
+                            active
+                              ? "bg-white/20 text-white"
+                              : disabled
+                                ? "bg-transparent text-[oklch(0.68_0.02_58)]"
+                                : capacityLabel.includes("left")
+                                  ? "bg-[var(--butter)]/50 text-[oklch(0.45_0.07_70)]"
+                                  : capacityLabel === "Rush"
+                                    ? "bg-[var(--blush)] text-[var(--terra)]"
+                                    : "bg-[var(--sage-soft)] text-[var(--sage-deep)]"
                           }`}
                         >
-                          <span className="hidden min-[380px]:inline">{isFull ? "Full" : blockedByLead ? "Lead" : capacityLabel}</span>
-                          <span className="min-[380px]:hidden">{isFull ? "✕" : blockedByLead ? "—" : capacityLabel === "2 left" ? "2" : "•"}</span>
+                          <span className="hidden min-[380px]:inline">{capacityLabel}</span>
+                          <span className="min-[380px]:hidden">{disabled ? "✕" : capacityLabel.includes("left") ? "!" : "•"}</span>
                         </span>
                         {isToday && !disabled && !active && <span className="absolute bottom-1 sm:bottom-1.5 h-1 w-1 rounded-full bg-[var(--rosewood)]" aria-hidden />}
                       </button>
@@ -395,42 +577,80 @@ export default function CustomOrder() {
                 </div>
                 <div className="flex flex-wrap gap-3 bg-[var(--cream)] px-4 py-3 text-[11.5px] font-semibold leading-5 sm:px-5">
                   <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--sage-deep)]" /> Open</span>
-                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--butter-deep)]" /> 2 left</span>
-                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[oklch(0.76_0.02_60)]" /> Full / Lead time</span>
-                  <span className="ml-auto hidden items-center gap-1.5 font-bold text-[var(--ink-mute)] sm:inline-flex"><Info size={12} /> Dates update live</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--butter-deep)]" /> Limited spots</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[var(--terra)]" /> Rush window</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[oklch(0.76_0.02_60)]" /> Closed / Full / Lead</span>
+                  <span className="ml-auto hidden items-center gap-1.5 font-bold text-[var(--ink-mute)] sm:inline-flex"><Info size={12} /> Syncs with bakery kitchen</span>
                 </div>
               </div>
               <p className="mt-3 flex items-center gap-2 text-[13px] leading-5 text-[var(--ink-soft)]">
                 <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--blush)] text-[var(--terra)]"><CalendarDays size={13} strokeWidth={2.1} /></span>
                 <span className="font-extrabold">{formatLongDate(selectedDate)}</span>
-                <span className="hidden font-semibold text-[var(--ink-mute)] sm:inline">· {selectedDate ? "Your kitchen hold" : "Pick a day to see pricing"}</span>
+                <span className="hidden font-semibold text-[var(--ink-mute)] sm:inline">· {selectedDate ? "Your scheduled kitchen slot" : "Pick a date to reserve"}</span>
               </p>
             </section>
 
-            {/* STEP 04 */}
+            {/* STEP 04 — client contact & finishing details */}
             <section className="border-b border-[oklch(0.88_0.018_52)] py-7 sm:py-8">
-              <StepTitle step="04" title="The finishing details" helper="A few helpful notes so your cake arrives just right." />
+              <StepTitle step="04" title="The finishing details" helper="Customer details for your order confirmation and pickup." />
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <div>
                   <FieldLabel htmlFor="c-name" required>Your name</FieldLabel>
-                  <input id="c-name" required name="name" autoComplete="name" className="field-base mt-2" placeholder="Your name" />
+                  <input
+                    id="c-name"
+                    required
+                    name="name"
+                    autoComplete="name"
+                    className="field-base mt-2"
+                    placeholder="e.g. Maya Sterling"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <FieldLabel htmlFor="c-email" required>Email for your order details</FieldLabel>
-                  <input id="c-email" required name="email" type="email" autoComplete="email" className="field-base mt-2" placeholder="you@example.com" />
+                  <FieldLabel htmlFor="c-email" required>Email for order receipt</FieldLabel>
+                  <input
+                    id="c-email"
+                    required
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    className="field-base mt-2"
+                    placeholder="you@example.com"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <FieldLabel htmlFor="c-time">Preferred pickup / delivery time</FieldLabel>
-                  <select id="c-time" className="field-base mt-2" defaultValue="12:00 PM">
-                    <option>10:00 AM</option>
-                    <option>12:00 PM</option>
-                    <option>2:00 PM</option>
-                    <option>4:00 PM</option>
+                  <FieldLabel htmlFor="c-phone">Phone number</FieldLabel>
+                  <input
+                    id="c-phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    className="field-base mt-2"
+                    placeholder="(503) 555-0144"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <FieldLabel htmlFor="c-time">Preferred time window</FieldLabel>
+                  <select
+                    id="c-time"
+                    className="field-base mt-2"
+                    value={timeWindow}
+                    onChange={(e) => setTimeWindow(e.target.value)}
+                  >
+                    <option>10:00 AM – 11:30 AM</option>
+                    <option>12:00 PM – 1:30 PM</option>
+                    <option>2:00 PM – 3:30 PM</option>
+                    <option>3:30 PM – 5:00 PM</option>
                   </select>
-                  <p className="mt-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">We’ll confirm the window after review.</p>
+                  <p className="mt-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">We’ll text or email when your order is boxed.</p>
                 </div>
-                <div>
-                  <FieldLabel htmlFor="c-file">Inspiration photo</FieldLabel>
+                <div className="sm:col-span-2">
+                  <FieldLabel htmlFor="c-file">Inspiration photo (optional)</FieldLabel>
                   <div className="relative mt-2">
                     <button
                       type="button"
@@ -440,7 +660,7 @@ export default function CustomOrder() {
                       <span className="grid h-7 w-7 place-items-center rounded-full bg-[oklch(0.94_0.03_13)] text-[var(--rosewood)]">
                         <ImagePlus size={14} strokeWidth={1.9} />
                       </span>
-                      <span className="min-w-0 flex-1 truncate">{fileName || "Add a reference image (optional)"}</span>
+                      <span className="min-w-0 flex-1 truncate">{fileName || "Add a reference image (optional palette or florals)"}</span>
                       <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.08em] text-[oklch(0.58_0.03_18)]">Browse</span>
                     </button>
                     <input
@@ -453,25 +673,32 @@ export default function CustomOrder() {
                       aria-hidden
                     />
                   </div>
-                  <p className="mt-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">JPG or PNG, up to 10 MB. Helps us match your vision.</p>
                 </div>
               </div>
 
               <div className="mt-7">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)]">Pickup or delivery?</p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2" role="group" aria-label="Fulfillment">
-                  <ChoiceButton active={fulfillment === "pickup"} onClick={() => setFulfillment("pickup")} label="Studio pickup" detail="Portland, Oregon · 417 SE 8th" />
-                  <ChoiceButton active={fulfillment === "delivery"} onClick={() => setFulfillment("delivery")} label="Local delivery" detail="$18 within our delivery zone" />
+                  <ChoiceButton active={fulfillment === "pickup"} onClick={() => setFulfillment("pickup")} label="Studio pickup" detail={`${settings.studioAddress}`} />
+                  <ChoiceButton active={fulfillment === "delivery"} onClick={() => setFulfillment("delivery")} label="Local delivery" detail={`$${deliveryFee} within our Portland zone`} />
                 </div>
                 {fulfillment === "delivery" && (
                   <div className="mt-4 animate-[fadeUp_280ms_cubic-bezier(0.16,1,0.3,1)]">
-                    <FieldLabel htmlFor="c-address" required>Delivery address</FieldLabel>
-                    <input id="c-address" required className="field-base mt-2" placeholder="Street address, Portland, OR" autoComplete="street-address" />
-                    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]"><MapPin size={12} className="text-[var(--rosewood)]" /> Flat $18 · we’ll confirm zone after submit</p>
+                    <FieldLabel htmlFor="c-address" required>Delivery street address</FieldLabel>
+                    <input
+                      id="c-address"
+                      required
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      className="field-base mt-2"
+                      placeholder="Street address, Apt/Suite, Portland, OR"
+                      autoComplete="street-address"
+                    />
+                    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]"><MapPin size={12} className="text-[var(--rosewood)]" /> Flat ${deliveryFee} · hand-delivered in temperature-safe transport</p>
                   </div>
                 )}
                 {fulfillment === "pickup" && (
-                  <p className="mt-3 flex items-center gap-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]"><MapPin size={12} className="text-[var(--rosewood)]" /> Pickup at the studio · we’ll send directions with your confirmation</p>
+                  <p className="mt-3 flex items-center gap-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]"><MapPin size={12} className="text-[var(--rosewood)]" /> Studio pickup at {settings.studioAddress} · parking on 8th Ave</p>
                 )}
               </div>
 
@@ -499,40 +726,63 @@ export default function CustomOrder() {
                   })}
                 </div>
                 <label className="mt-4 block">
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)]">Anything else we should know?</span>
-                  <textarea className="field-base mt-2 min-h-[92px]" placeholder="Allergies, message on the cake, serving details…" rows={3} />
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[oklch(0.34_0.02_35)]">Special notes &amp; cake inscription</span>
+                  <textarea
+                    value={specialNotes}
+                    onChange={(e) => setSpecialNotes(e.target.value)}
+                    className="field-base mt-2 min-h-[92px]"
+                    placeholder="Allergies, lettering on cake plaque, recipient name, party vibe…"
+                    rows={3}
+                  />
                 </label>
-                <p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]"><ShieldCheck size={12} className="text-[var(--rosewood)]" /> We handle wheat, dairy, eggs, soy, and tree nuts in the same kitchen.</p>
+                <p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-[oklch(0.58_0.03_18)]"><ShieldCheck size={12} className="text-[var(--rosewood)]" /> We handle wheat, dairy, eggs, soy, and tree nuts in our kitchen studio.</p>
               </div>
             </section>
 
             {/* mobile quote + submit */}
             <div className="mt-6 border-t border-[oklch(0.88_0.018_52)] pt-6 lg:hidden">
-              <QuoteCard lineItems={lineItems} total={total} deposit={deposit} balance={balance} selectedDate={selectedDate} fulfillment={fulfillment} compact />
+              <QuoteCard
+                lineItems={lineItems}
+                total={total}
+                deposit={deposit}
+                balance={balance}
+                selectedDate={selectedDate}
+                fulfillment={fulfillment}
+                deliveryFee={deliveryFee}
+                compact
+              />
               <button type="submit" className="button-rose mt-4 w-full justify-center py-4 text-[11px]">
-                Review order &amp; reserve date <ArrowRight size={14} strokeWidth={2.2} />
+                Submit order &amp; reserve date <ArrowRight size={14} strokeWidth={2.2} />
               </button>
-              <p className="mt-3 text-center text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">No payment collected in this demo · clear total before you confirm</p>
+              <p className="mt-3 text-center text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">Creates an active studio order with order confirmation number</p>
             </div>
           </form>
 
           {/* desktop sticky quote */}
           <aside className="hidden lg:block">
             <div className="sticky top-[88px]">
-              <QuoteCard lineItems={lineItems} total={total} deposit={deposit} balance={balance} selectedDate={selectedDate} fulfillment={fulfillment} />
+              <QuoteCard
+                lineItems={lineItems}
+                total={total}
+                deposit={deposit}
+                balance={balance}
+                selectedDate={selectedDate}
+                fulfillment={fulfillment}
+                deliveryFee={deliveryFee}
+              />
               <button
                 type="button"
                 onClick={() => (document.querySelector<HTMLFormElement>("form") as HTMLFormElement | null)?.requestSubmit()}
                 className="button-rose mt-4 w-full justify-center py-4 text-[11px] shadow-[0_10px_24px_oklch(0.49_0.09_18/0.18)]"
               >
-                Review order &amp; reserve date <ArrowRight size={15} strokeWidth={2.2} />
+                Submit order &amp; reserve date <ArrowRight size={15} strokeWidth={2.2} />
               </button>
               <div className="mt-3 flex items-center justify-center gap-2 text-[11px] leading-4 text-[oklch(0.52_0.02_35)]">
-                <ShieldCheck size={12} className="text-[var(--rosewood)]" /> No payment collected in this demo
+                <ShieldCheck size={12} className="text-[var(--rosewood)]" /> 50% deposit holds ingredients and oven spot
               </div>
               <div className="mt-4 rounded-2xl border-[1.5px] border-dashed border-[oklch(0.85_0.035_58)] bg-[var(--cream)] p-4">
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink-soft)]">What happens next?</p>
-                <p className="mt-1.5 text-[12.5px] leading-5 text-[var(--ink-mute)]">We’ll review your details and hold the date while we confirm. You’ll get a deposit link and balance reminder by email.</p>
+                <p className="mt-1.5 text-[12.5px] leading-5 text-[var(--ink-mute)]">Your order is saved into the studio system with a unique tracking number (#PC-XXXX). Remaining balance is due 3 days before pickup.</p>
               </div>
             </div>
           </aside>
@@ -652,6 +902,7 @@ function QuoteCard({
   balance,
   selectedDate,
   fulfillment,
+  deliveryFee,
   compact = false,
 }: {
   lineItems: { label: string; price: number }[];
@@ -660,6 +911,7 @@ function QuoteCard({
   balance: number;
   selectedDate: string;
   fulfillment: Fulfillment;
+  deliveryFee: number;
   compact?: boolean;
 }) {
   return (
@@ -722,7 +974,7 @@ function QuoteCard({
           ) : (
             <MapPin size={14} strokeWidth={1.9} className="mt-0.5 shrink-0 text-[var(--rosewood)]" />
           )}
-          {fulfillment === "delivery" ? "Local delivery · $18" : "Studio pickup · 417 SE 8th, Portland"}
+          {fulfillment === "delivery" ? `Local delivery · $${deliveryFee}` : "Studio pickup · 1428 SE Division St, Portland"}
         </p>
       </div>
     </div>
@@ -730,63 +982,97 @@ function QuoteCard({
 }
 
 function Confirmation({
-  total,
-  deposit,
-  balance,
-  selectedDate,
-  fulfillment,
-  product,
+  order,
   onEdit,
 }: {
-  total: number;
-  deposit: number;
-  balance: number;
-  selectedDate: string;
-  fulfillment: Fulfillment;
-  product: ProductType;
+  order: BakeryOrder;
   onEdit: () => void;
 }) {
-  const balanceDue = addDays(new Date(`${selectedDate}T12:00:00`), -3);
-  const noun =
-    product === "cupcakes" ? "cupcake order" : product === "cookies" ? "cookie order" : product === "custom" ? "custom consultation" : "celebration cake";
+  const balanceDue = addDays(new Date(`${order.date}T12:00:00`), -3);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleOpenMyOrders = () => {
+    window.dispatchEvent(new CustomEvent("open-my-orders", { detail: { orderId: order.id } }));
+  };
+
   return (
     <div className="min-h-screen bg-[var(--cream)] text-[var(--ink)]">
       <SiteHeader />
       <main className="container py-10 sm:py-16">
-        <div className="paper-texture relative mx-auto max-w-[720px] overflow-hidden rounded-[2rem] bg-[var(--paper)] p-6 shadow-[0_24px_70px_oklch(0.305_0.033_42/0.08)] sm:p-10 lg:p-12">
+        <div id="order-receipt-print" className="paper-texture relative mx-auto max-w-[760px] overflow-hidden rounded-[2rem] bg-[var(--paper)] p-6 shadow-[0_24px_70px_oklch(0.305_0.033_42/0.08)] sm:p-10 lg:p-12">
           <span className="bloom mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--blush)] text-[var(--terra)]">
             <Check size={30} strokeWidth={2.4} />
           </span>
+
           <div className="mt-6 text-center">
-            <p className="eyebrow justify-center">Order summary</p>
-            <h1 className="display-title mx-auto mt-3 max-w-[12ch] text-[48px] sm:text-[62px] lg:text-[70px]">
-              Your date is <em>held.</em>
+            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--terra)] px-4 py-1 text-white shadow-sm">
+              <PackageCheck size={14} />
+              <span className="font-mono text-[13.5px] font-bold tracking-wider">{order.orderNumber}</span>
+            </div>
+            <p className="eyebrow mt-3 justify-center">Order Confirmed &amp; Date Held</p>
+            <h1 className="display-title mx-auto mt-2 max-w-[14ch] text-[44px] sm:text-[58px] lg:text-[66px]">
+              We have your <em>spot.</em>
             </h1>
-            <p className="prose-measure mx-auto mt-4 max-w-[46ch] text-[14.5px] leading-7 text-[var(--ink-soft)]">
-              This demo confirmation shows exactly what the customer sees after review. In a live bakery system, the deposit action would connect here and the balance reminder would be scheduled.
+            <p className="prose-measure mx-auto mt-4 max-w-[48ch] text-[14.5px] leading-7 text-[var(--ink-soft)]">
+              Thank you, <strong>{order.customer.name}</strong>. Your custom order is now entered into the studio schedule. We have sent receipt details to <strong>{order.customer.email}</strong>.
             </p>
           </div>
 
+          {/* Details summary */}
           <div className="mt-8 grid gap-4 rounded-2xl bg-[var(--cream)] p-5 sm:grid-cols-3 sm:gap-6 sm:p-6">
-            <SummaryBlock label="Order" value={noun} />
-            <SummaryBlock label="Date" value={formatLongDate(selectedDate)} />
-            <SummaryBlock label="Fulfillment" value={fulfillment === "delivery" ? "Local delivery · $18" : "Studio pickup · Portland"} />
+            <SummaryBlock label="Order Number" value={order.orderNumber} />
+            <SummaryBlock label="Reserved Date" value={`${formatLongDate(order.date)} · ${order.timeWindow}`} />
+            <SummaryBlock
+              label="Fulfillment"
+              value={order.fulfillment === "delivery" ? `Delivery to: ${order.customer.address || "Portland Area"}` : `Pickup at Studio (Portland)`}
+            />
           </div>
 
+          {/* Items Breakdown */}
+          <div className="mt-6 rounded-2xl border border-[oklch(0.9_0.022_65)] bg-white/70 p-5">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.13em] text-[var(--terra)]">Order Items</p>
+            <div className="mt-3 divide-y divide-[oklch(0.92_0.015_60)]">
+              {order.items.map((it, i) => (
+                <div key={i} className="flex items-start justify-between gap-4 py-2.5 text-[13.5px]">
+                  <div>
+                    <p className="font-bold text-[var(--ink)]">{it.quantity}x {it.title}</p>
+                    {it.detail && <p className="text-[12px] text-[var(--ink-mute)]">{it.detail}</p>}
+                  </div>
+                  <span className="font-semibold">{currency(it.price)}</span>
+                </div>
+              ))}
+            </div>
+
+            {order.allergies && order.allergies.length > 0 && (
+              <div className="mt-3 border-t border-[oklch(0.92_0.015_60)] pt-3 text-[12px] text-[var(--ink-mute)]">
+                <span className="font-bold text-[var(--ink)]">Dietary notices:</span> {order.allergies.join(", ")}
+              </div>
+            )}
+            {order.notes && (
+              <div className="mt-2 text-[12px] text-[var(--ink-mute)]">
+                <span className="font-bold text-[var(--ink)]">Special instructions:</span> {order.notes}
+              </div>
+            )}
+          </div>
+
+          {/* Payment summary */}
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl bg-[var(--cream)] p-4">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.11em] text-[var(--ink-mute)]">Order total</p>
-              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(total)}</p>
+              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(order.total)}</p>
             </div>
             <div className="rounded-2xl bg-[var(--blush)] p-4">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.11em] text-[oklch(0.45_0.08_20)]">Deposit due now</p>
-              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(deposit)}</p>
-              <p className="mt-1.5 text-[11.5px] leading-4 text-[oklch(0.45_0.05_28)]">Holds your date</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.11em] text-[oklch(0.45_0.08_20)]">Deposit paid</p>
+              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(order.deposit)}</p>
+              <p className="mt-1.5 text-[11.5px] leading-4 text-[oklch(0.45_0.05_28)]">Date held &amp; scheduled</p>
             </div>
             <div className="rounded-2xl bg-[var(--cream)] p-4">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.11em] text-[var(--ink-mute)]">Balance due</p>
-              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(balance)}</p>
-              <p className="mt-1.5 text-[11.5px] leading-4 text-[var(--ink-mute)]">by {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(balanceDue)}</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.11em] text-[var(--ink-mute)]">Balance remaining</p>
+              <p className="mt-2 font-display text-[28px] font-semibold leading-none tracking-[-0.01em]">{currency(order.balance)}</p>
+              <p className="mt-1.5 text-[11.5px] leading-4 text-[var(--ink-mute)]">due by {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(balanceDue)}</p>
             </div>
           </div>
 
@@ -797,20 +1083,44 @@ function Confirmation({
             <div>
               <p className="text-[13px] font-extrabold leading-5">Automated balance reminder</p>
               <p className="mt-1 max-w-[48ch] text-[12.5px] leading-5 text-[var(--ink-mute)]">
-                We’ll email a friendly reminder three days before your pickup with the remaining balance and pickup window. No surprises.
+                We’ll email a friendly balance reminder three days before your pickup along with day-of instructions and contact info.
               </p>
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/" className="button-rose flex-1 justify-center py-4 text-[11px]">
-              Back to the studio <ArrowRight size={14} />
-            </Link>
-            <button type="button" onClick={onEdit} className="button-ink flex-1 justify-center py-4">
-              Edit order
+          {/* Action buttons */}
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row print:hidden">
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="button-ink flex-1 justify-center py-4 text-[12px] gap-2"
+            >
+              <Printer size={15} /> Print Order Receipt
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenMyOrders}
+              className="button-rose flex-1 justify-center py-4 text-[12px] gap-2"
+            >
+              <Receipt size={15} /> Track Order in My Orders
             </button>
           </div>
-          <p className="mt-4 text-center text-[11px] leading-4 text-[oklch(0.58_0.03_18)]">A confirmation email preview would appear here in the live system.</p>
+
+          <div className="mt-4 flex items-center justify-between text-[12px] text-[var(--ink-mute)] print:hidden">
+            <button
+              type="button"
+              onClick={onEdit}
+              className="inline-flex items-center gap-1.5 underline decoration-[var(--terra)]/30 hover:text-[var(--terra)]"
+            >
+              <RotateCcw size={13} /> Edit order details
+            </button>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 underline decoration-[var(--terra)]/30 hover:text-[var(--terra)]"
+            >
+              Back to studio home <ArrowRight size={13} />
+            </Link>
+          </div>
         </div>
       </main>
       <SiteFooter />

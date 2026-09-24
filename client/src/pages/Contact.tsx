@@ -1,30 +1,59 @@
-/** Garden Bakery: contact + FAQ — rounded form, pastel chips, blush FAQ. All logic preserved. */
+/** Garden Bakery: contact + FAQ — rounded form, pastel chips, blush FAQ. Connected to useBakeryStore inquiries. */
 import { useState, useRef } from "react";
-import { Mail, MapPin, Send, Clock3, ShieldCheck, ChevronDown, Phone, Navigation, Copy, ExternalLink } from "lucide-react";
+import {
+  Mail,
+  MapPin,
+  Send,
+  Clock3,
+  ShieldCheck,
+  ChevronDown,
+  Phone,
+  Navigation,
+  Copy,
+  ExternalLink,
+  Check,
+  Sparkles,
+  ArrowRight,
+  RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
 import { faqItems } from "@/lib/bakeryData";
 import { MapView, type MapHandle } from "@/components/Map";
 import { ScriptNote, HeartDoodle, LeafSprig } from "@/components/decor";
+import { useBakeryStore, type StudioInquiry } from "@/lib/bakeryStore";
 
 export default function Contact() {
   const [open, setOpen] = useState<number | null>(0);
   const mapRef = useRef<MapHandle | null>(null);
+  const { addInquiry } = useBakeryStore();
+  const [submittedInquiry, setSubmittedInquiry] = useState<StudioInquiry | null>(null);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const name = String(fd.get("name") || "").trim();
     const email = String(fd.get("email") || "").trim();
+    const occasion = String(fd.get("occasion") || "").trim();
+    const date = String(fd.get("date") || "").trim();
     const detail = String(fd.get("detail") || "").trim();
+
     if (!name || !email || !detail) {
       toast.error("Please fill the required fields", { description: "Name, email and details are needed." });
       return;
     }
-    toast.success("Your note is ready for the studio.", {
-      description: "This demo form does not send an email yet — in production it would email and create a draft order.",
+
+    const inq = addInquiry({
+      name,
+      email,
+      occasion: occasion || "Studio Celebration Inquiry",
+      preferredDate: date || undefined,
+      detail,
+      status: "new",
     });
-    (e.currentTarget as HTMLFormElement).reset();
+
+    setSubmittedInquiry(inq);
   };
 
   const copyAddress = async () => {
@@ -87,7 +116,7 @@ export default function Contact() {
                   <span className={`${chip} bg-[var(--paper)] text-[var(--terra)]`}>
                     <Clock3 size={15} strokeWidth={2} />
                   </span>
-                  Studio hours · Tue–Sat 10a–5p · replies within a day
+                  Studio hours · Tue–Sat 10a–5p · replies within 24 hours
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   <button onClick={copyAddress} className="button-ink px-4 py-2.5 text-[12.5px]">
@@ -111,55 +140,111 @@ export default function Contact() {
               </div>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="rounded-[2rem] bg-[var(--paper)] p-6 shadow-[0_24px_70px_oklch(0.305_0.033_42/0.07)] sm:p-9"
-              noValidate
-            >
-              <p className="eyebrow">Studio inquiry</p>
-              <p className="mt-2 text-[13px] leading-5 text-[var(--ink-mute)]">Share a little detail — we’ll respond within a day. For the fastest quote, use the studio.</p>
+            <div className="rounded-[2rem] bg-[var(--paper)] p-6 shadow-[0_24px_70px_oklch(0.305_0.033_42/0.07)] sm:p-9">
+              {submittedInquiry ? (
+                /* Inquiry Confirmation Card */
+                <div className="py-4 text-center animate-[fadeUp_240ms_cubic-bezier(0.16,1,0.3,1)]">
+                  <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[var(--blush)] text-[var(--terra)]">
+                    <Check size={32} strokeWidth={2.4} />
+                  </span>
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--blush)] px-4 py-1 text-[var(--terra)] font-mono text-[13px] font-bold">
+                    <Sparkles size={14} />
+                    <span>Inquiry Logged · {submittedInquiry.inquiryNumber}</span>
+                  </div>
+                  <h2 className="mt-3 font-display text-[32px] sm:text-[38px] font-semibold leading-tight">
+                    Thank you, <em>{submittedInquiry.name}</em>!
+                  </h2>
+                  <p className="mx-auto mt-3 max-w-[44ch] text-[14px] leading-6 text-[var(--ink-soft)]">
+                    Your inquiry has been placed into Maya’s studio inbox. We review all consultation inquiries personally and will respond to <strong>{submittedInquiry.email}</strong> within <strong>24 business hours</strong>.
+                  </p>
 
-              <div className="mt-7 grid gap-5 sm:grid-cols-2">
-                <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                  Your name <span className="text-[var(--terra)]">*</span>
-                  <input required name="name" autoComplete="name" className="field-base mt-2" placeholder="Your name" />
-                </label>
-                <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                  Email <span className="text-[var(--terra)]">*</span>
-                  <input required type="email" name="email" autoComplete="email" className="field-base mt-2" placeholder="you@example.com" />
-                </label>
-                <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                  Occasion
-                  <select name="occasion" className="field-base mt-2" defaultValue="">
-                    <option value="" disabled>Select one</option>
-                    <option>Birthday</option>
-                    <option>Wedding</option>
-                    <option>Shower</option>
-                    <option>Just because</option>
-                  </select>
-                </label>
-                <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                  Preferred date
-                  <input name="date" type="date" className="field-base mt-2" />
-                </label>
-                <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)] sm:col-span-2">
-                  A little more detail <span className="text-[var(--terra)]">*</span>
-                  <textarea required name="detail" className="field-base mt-2 min-h-[120px] resize-y" placeholder="Tell us about your idea — guest count, flavors you love, colors, date…" rows={4} />
-                </label>
-              </div>
+                  <div className="mt-6 rounded-2xl bg-[var(--cream)] p-5 text-left border border-[oklch(0.9_0.022_65)] space-y-2.5 text-[13px]">
+                    <div className="flex justify-between items-baseline">
+                      <span className="font-extrabold uppercase text-[10.5px] tracking-wider text-[var(--terra)]">Inquiry details</span>
+                      <span className="font-mono text-[12px] text-[var(--ink-mute)]">{submittedInquiry.inquiryNumber}</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-[var(--ink)]">Occasion:</span> {submittedInquiry.occasion}
+                    </div>
+                    {submittedInquiry.preferredDate && (
+                      <div>
+                        <span className="font-bold text-[var(--ink)]">Preferred Date:</span> {submittedInquiry.preferredDate}
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-bold text-[var(--ink)]">Note:</span> {submittedInquiry.detail}
+                    </div>
+                  </div>
 
-              <button className="button-rose mt-7 w-full justify-center sm:w-auto sm:px-8" type="submit">
-                Send a note <Send size={15} strokeWidth={2.1} />
-              </button>
-              <p className="mt-4 text-[12px] leading-5 text-[var(--ink-mute)]">
-                For the fastest price and availability check, please use{" "}
-                <Link href="/custom-order" className="link-underline font-extrabold text-[var(--terra)]">
-                  the custom order studio
-                </Link>
-                .
-              </p>
-              <p className="mt-3 text-right"><ScriptNote className="text-[18px] text-[var(--ink-mute)]">we read every note</ScriptNote></p>
-            </form>
+                  <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSubmittedInquiry(null)}
+                      className="button-ink flex-1 justify-center py-3.5 text-[12.5px] gap-2"
+                    >
+                      <RotateCcw size={14} /> Send another note
+                    </button>
+                    <Link
+                      href="/custom-order"
+                      className="button-rose flex-1 justify-center py-3.5 text-[12.5px] gap-2"
+                    >
+                      Order studio <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                /* Inquiry Form */
+                <form
+                  onSubmit={handleSubmit}
+                  noValidate
+                >
+                  <p className="eyebrow">Studio inquiry</p>
+                  <p className="mt-2 text-[13px] leading-5 text-[var(--ink-mute)]">Share a little detail — we’ll respond within a day. For the fastest quote, use the studio.</p>
+
+                  <div className="mt-7 grid gap-5 sm:grid-cols-2">
+                    <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                      Your name <span className="text-[var(--terra)]">*</span>
+                      <input required name="name" autoComplete="name" className="field-base mt-2" placeholder="Your name" />
+                    </label>
+                    <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                      Email <span className="text-[var(--terra)]">*</span>
+                      <input required type="email" name="email" autoComplete="email" className="field-base mt-2" placeholder="you@example.com" />
+                    </label>
+                    <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                      Occasion
+                      <select name="occasion" className="field-base mt-2" defaultValue="">
+                        <option value="" disabled>Select one</option>
+                        <option>Birthday</option>
+                        <option>Wedding</option>
+                        <option>Shower</option>
+                        <option>Corporate Gathering</option>
+                        <option>Just because</option>
+                      </select>
+                    </label>
+                    <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                      Preferred date
+                      <input name="date" type="date" className="field-base mt-2" />
+                    </label>
+                    <label className="block text-[12px] font-extrabold uppercase tracking-[0.08em] text-[var(--ink-soft)] sm:col-span-2">
+                      A little more detail <span className="text-[var(--terra)]">*</span>
+                      <textarea required name="detail" className="field-base mt-2 min-h-[120px] resize-y" placeholder="Tell us about your idea — guest count, flavors you love, colors, date…" rows={4} />
+                    </label>
+                  </div>
+
+                  <button className="button-rose mt-7 w-full justify-center sm:w-auto sm:px-8" type="submit">
+                    Send a note <Send size={15} strokeWidth={2.1} />
+                  </button>
+                  <p className="mt-4 text-[12px] leading-5 text-[var(--ink-mute)]">
+                    For the fastest price and availability check, please use{" "}
+                    <Link href="/custom-order" className="link-underline font-extrabold text-[var(--terra)]">
+                      the custom order studio
+                    </Link>
+                    .
+                  </p>
+                  <p className="mt-3 text-right"><ScriptNote className="text-[18px] text-[var(--ink-mute)]">we read every note</ScriptNote></p>
+                </form>
+              )}
+            </div>
           </div>
         </section>
 

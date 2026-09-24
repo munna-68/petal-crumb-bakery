@@ -7,6 +7,7 @@ import Preloader from "./components/Preloader";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { CartProvider } from "./contexts/CartContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
+import { BakeryProvider } from "./lib/bakeryStore";
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import CustomOrder from "./pages/CustomOrder";
@@ -45,15 +46,17 @@ function App() {
         defaultTheme="light"
         // switchable
       >
-        <CartProvider>
-          <FavoritesProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Preloader />
-              <WouterRouter base={routerBase}><AppRoutes /></WouterRouter>
-            </TooltipProvider>
-          </FavoritesProvider>
-        </CartProvider>
+        <BakeryProvider>
+          <CartProvider>
+            <FavoritesProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Preloader />
+                <WouterRouter base={routerBase}><AppRoutes /></WouterRouter>
+              </TooltipProvider>
+            </FavoritesProvider>
+          </CartProvider>
+        </BakeryProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
