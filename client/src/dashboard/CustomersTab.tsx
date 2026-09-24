@@ -1,255 +1,311 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
+import { useBakeryStore, BakeryOrder } from "@/lib/bakeryStore";
 import {
-  Users,
+  compileCustomerDirectory,
+  saveCustomerNote,
+  CustomerDirectoryEntry,
+  formatCurrency,
+  formatFullDate,
+} from "./dashboardUtils";
+import { DetailedOrderModal } from "./OrderDialogs";
+import {
   Search,
-  Mail,
+  Users,
   Phone,
-  Calendar,
-  Sparkles,
+  Mail,
   MapPin,
   Heart,
-  Award,
   AlertTriangle,
+  Cake,
+  Clock,
+  ExternalLink,
+  Edit2,
+  Check,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
-import { useBakeryStore } from "@/lib/bakeryStore";
+import { toast } from "sonner";
 
-export function CustomersTab() {
-  const { orders } = useBakeryStore();
-  const [search, setSearch] = useState("");
+export default function CustomersTab() {
+  const { orders, inquiries } = useBakeryStore();
 
-  const currency = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [editingEmail, setEditingEmail] = useState<string | null>(null);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<BakeryOrder | null>(null);
+  const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
 
-  // Aggregate unique customers from all orders
-  const customerList = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        name: string;
-        email: string;
-        phone: string;
-        address?: string;
-        orderCount: number;
-        totalSpent: number;
-        allergies: Set<string>;
-        orders: { id: string; number: string; date: string; title: string; total: number }[];
-        lastDate: string;
-      }
-    >();
+  // Compile directory
+  const directory = useMemo(() => {
+    return compileCustomerDirectory(orders, inquiries);
+  }, [orders, inquiries]);
 
-    orders.forEach((o) => {
-      const key = o.customer.email.toLowerCase() || o.customer.name.toLowerCase();
-      const existing = map.get(key);
-
-      const title =
-        o.items.map((i) => i.title).join(", ") ||
-        (o.cakeConfig ? `${o.cakeConfig.size} ${o.cakeConfig.flavor}` : "Custom Cake");
-
-      if (existing) {
-        existing.orderCount += 1;
-        existing.totalSpent += o.total;
-        if (o.customer.address) existing.address = o.customer.address;
-        if (o.customer.phone && !existing.phone) existing.phone = o.customer.phone;
-        o.allergies.forEach((a) => existing.allergies.add(a));
-        existing.orders.push({
-          id: o.id,
-          number: o.orderNumber,
-          date: o.date,
-          title,
-          total: o.total,
-        });
-        if (o.date > existing.lastDate) existing.lastDate = o.date;
-      } else {
-        const allergiesSet = new Set<string>();
-        o.allergies.forEach((a) => allergiesSet.add(a));
-        map.set(key, {
-          name: o.customer.name,
-          email: o.customer.email,
-          phone: o.customer.phone || "(503) 555-0142",
-          address: o.customer.address,
-          orderCount: 1,
-          totalSpent: o.total,
-          allergies: allergiesSet,
-          orders: [
-            {
-              id: o.id,
-              number: o.orderNumber,
-              date: o.date,
-              title,
-              total: o.total,
-            },
-          ],
-          lastDate: o.date,
-        });
-      }
+  // Filtered directory
+  const filteredCustomers = useMemo(() => {
+    if (!searchQuery.trim()) return directory;
+    const q = searchQuery.toLowerCase().trim();
+    return directory.filter((c) => {
+      return (
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.phone.toLowerCase().includes(q) ||
+        (c.address && c.address.toLowerCase().includes(q)) ||
+        c.preferredFlavors.some((f) => f.toLowerCase().includes(q))
+      );
     });
+  }, [directory, searchQuery]);
 
-    return Array.from(map.values());
-  }, [orders]);
+  const handleStartEditNote = (client: CustomerDirectoryEntry) => {
+    setEditingEmail(client.email);
+    setNotesDraft(client.notes || "");
+  };
 
-  const filtered = useMemo(() => {
-    return customerList.filter(
-      (c) =>
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.email.toLowerCase().includes(search.toLowerCase()) ||
-        c.phone.includes(search)
-    );
-  }, [customerList, search]);
+  const handleSaveNote = (email: string) => {
+    saveCustomerNote(email, notesDraft);
+    setEditingEmail(null);
+    toast.success("Client preference note saved");
+  };
 
   const getInitials = (name: string) => {
-    const parts = name.split(" ");
-    return parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() : name.slice(0, 2).toUpperCase();
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[oklch(0.89_0.025_62)] pb-5">
+      {/* Top Header & Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="eyebrow">Client relationships</span>
-          <h2 className="mt-1 font-display text-[28px] sm:text-[32px] font-semibold leading-none text-[var(--ink)]">
-            Celebration Clients CRM
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[var(--terra)]">
+              Client Directory
+            </span>
+            <span className="text-xs text-[var(--ink-mute)]">·</span>
+            <span className="text-xs font-semibold text-[var(--ink-mute)]">
+              Studio Patron Loyalty &amp; Preferences
+            </span>
+          </div>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[var(--ink)] mt-0.5">
+            Clientele &amp; Celebrants
           </h2>
-          <p className="mt-1.5 text-[13px] text-[var(--ink-mute)]">
-            Directory of hosts and patrons who order custom cakes and seasonal sweets.
-          </p>
         </div>
 
-        {/* Search */}
-        <div className="relative min-w-[260px]">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--ink-mute)]" />
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-[var(--ink-mute)]" />
           <input
             type="text"
-            placeholder="Search by client or phone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="field-base pl-10 text-[13px]"
+            placeholder="Search patron by name, flavor, email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-full border border-[oklch(0.88_0.03_60)] bg-white text-xs focus:outline-none focus:border-[var(--terra)] shadow-xs"
           />
         </div>
       </div>
 
-      {/* Customer Count / Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-5 shadow-xs">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[var(--terra)]">
-            Total Active Clients
+      {/* Customer Directory Cards */}
+      {filteredCustomers.length === 0 ? (
+        <div className="py-16 text-center rounded-2xl border border-dashed border-[var(--hairline)] bg-[var(--paper)]">
+          <Users size={36} className="mx-auto text-[var(--ink-mute)] mb-3 opacity-60" />
+          <h4 className="font-display text-lg font-bold text-[var(--ink)]">No patrons found</h4>
+          <p className="text-xs text-[var(--ink-mute)] mt-1">
+            Try searching for a different name, email, or favorite cake flavor.
           </p>
-          <p className="mt-2 font-display text-[32px] font-semibold text-[var(--ink)]">
-            {customerList.length}
-          </p>
-          <p className="mt-1 text-[12px] text-[var(--ink-mute)]">Portland hosts &amp; patrons</p>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {filteredCustomers.map((client) => {
+            const isEditing = editingEmail === client.email;
 
-        <div className="rounded-2xl border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-5 shadow-xs">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[var(--terra)]">
-            VIP Celebration Hosts
-          </p>
-          <p className="mt-2 font-display text-[32px] font-semibold text-[var(--ink)]">
-            {customerList.filter((c) => c.orderCount > 1 || c.totalSpent > 150).length}
-          </p>
-          <p className="mt-1 text-[12px] text-[var(--ink-mute)]">Multiple bookings or $150+ spend</p>
-        </div>
+            return (
+              <div
+                key={client.email}
+                className="rounded-2xl border border-[var(--hairline)] bg-[var(--paper)] p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
+              >
+                <div>
+                  {/* Top Bar with Initials Avatar & Spending Badge */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="size-11 rounded-full bg-[var(--terra-soft)] text-[var(--terra-deep)] grid place-items-center font-display text-base font-bold shrink-0">
+                        {getInitials(client.name)}
+                      </div>
+                      <div>
+                        <h3 className="font-display text-lg font-bold text-[var(--ink)]">
+                          {client.name}
+                        </h3>
+                        <div className="flex items-center gap-2 text-xs text-[var(--ink-soft)] mt-0.5">
+                          <a
+                            href={`mailto:${client.email}`}
+                            className="hover:text-[var(--terra)] transition-colors truncate max-w-[180px]"
+                          >
+                            {client.email}
+                          </a>
+                          <span>·</span>
+                          <a
+                            href={`tel:${client.phone}`}
+                            className="hover:text-[var(--terra)] transition-colors"
+                          >
+                            {client.phone}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
 
-        <div className="rounded-2xl border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-5 shadow-xs">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[var(--terra)]">
-            Allergy Care Flagged
-          </p>
-          <p className="mt-2 font-display text-[32px] font-semibold text-[var(--ink)]">
-            {customerList.filter((c) => c.allergies.size > 0).length}
-          </p>
-          <p className="mt-1 text-[12px] text-[var(--ink-mute)]">Gluten-free, dairy, or nut notes</p>
-        </div>
-      </div>
+                    <div className="text-right shrink-0">
+                      <span className="font-display text-base font-bold text-[var(--ink)] block">
+                        {formatCurrency(client.totalSpend)}
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--terra)] block">
+                        {client.orderCount} Order{client.orderCount === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                  </div>
 
-      {/* Customer Cards Grid */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((customer) => {
-          const isVip = customer.orderCount > 1 || customer.totalSpent > 180;
-          const hasAllergies = customer.allergies.size > 0;
+                  {/* Delivery Address if present */}
+                  {client.address && (
+                    <div className="mt-3 flex items-center gap-1.5 text-xs text-[var(--ink-soft)]">
+                      <MapPin size={12} className="text-[var(--terra)] shrink-0" />
+                      <span className="truncate">{client.address}</span>
+                    </div>
+                  )}
 
-          return (
-            <article
-              key={customer.email}
-              className="flex flex-col justify-between rounded-[1.75rem] border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-6 shadow-xs transition-all hover:border-[oklch(0.78_0.045_50)] hover:shadow-sm"
-            >
-              <div>
-                {/* Header */}
-                <div className="flex items-start gap-3.5">
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--blush)] font-display text-[16px] font-bold text-[oklch(0.45_0.08_20)]">
-                    {getInitials(customer.name)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <h3 className="truncate font-display text-[20px] font-semibold text-[var(--ink)]">
-                        {customer.name}
-                      </h3>
-                      {isVip && (
-                        <span
-                          className="shrink-0 rounded-full bg-[var(--butter-soft)] px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-[0.1em] text-[var(--butter-deep)]"
-                          title="VIP Celebration Host"
-                        >
-                          VIP
+                  {/* Preferred Flavors & Dietary Tags */}
+                  <div className="mt-3.5 space-y-2">
+                    {client.preferredFlavors.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--ink-mute)] mr-1">
+                          Flavors:
                         </span>
+                        {client.preferredFlavors.map((flavor, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded-full bg-[var(--cream)] border border-[var(--hairline)] text-[10.5px] font-bold text-[var(--ink-soft)]"
+                          >
+                            {flavor}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {client.allergies.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 mr-1 flex items-center gap-1">
+                          <AlertTriangle size={10} />
+                          <span>Allergies:</span>
+                        </span>
+                        {client.allergies.map((alg, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[10.5px] font-bold text-amber-900"
+                          >
+                            {alg}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Private Baker's Notes Field */}
+                  <div className="mt-4 pt-3 border-t border-[var(--hairline)] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[var(--ink-mute)] flex items-center gap-1">
+                        <Sparkles size={11} className="text-[var(--terra)]" />
+                        <span>Private Baker's Notes</span>
+                      </span>
+
+                      {!isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditNote(client)}
+                          className="text-[11px] font-bold text-[var(--terra)] hover:underline flex items-center gap-1"
+                        >
+                          <Edit2 size={10} />
+                          <span>Edit Note</span>
+                        </button>
                       )}
                     </div>
-                    <p className="truncate text-[12.5px] text-[var(--ink-mute)]">{customer.email}</p>
+
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={notesDraft}
+                          onChange={(e) => setNotesDraft(e.target.value)}
+                          placeholder="e.g. Prefers organic garden blooms; always collects in person."
+                          className="w-full text-xs p-2.5 rounded-lg border border-[oklch(0.88_0.03_60)] bg-white min-h-[60px] focus:outline-none focus:border-[var(--terra)]"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEditingEmail(null)}
+                            className="px-3 py-1 rounded-full border text-[11px]"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveNote(client.email)}
+                            className="px-3 py-1 rounded-full bg-[var(--terra)] text-white text-[11px] font-bold"
+                          >
+                            Save Note
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs bg-[var(--cream)]/60 rounded-lg p-2.5 text-[var(--ink-soft)] italic border border-[var(--hairline)]">
+                        {client.notes || "No private notes recorded. Click 'Edit Note' to add custom preferences."}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* Details */}
-                <div className="mt-4 space-y-2 text-[12.5px] text-[var(--ink-soft)]">
-                  <p className="flex items-center gap-2">
-                    <Phone size={13} className="text-[var(--terra)]" /> {customer.phone}
-                  </p>
-                  {customer.address && (
-                    <p className="flex items-center gap-2 truncate">
-                      <MapPin size={13} className="text-[var(--terra)] shrink-0" /> {customer.address}
-                    </p>
-                  )}
-                  <p className="flex items-center gap-2">
-                    <Calendar size={13} className="text-[var(--terra)]" /> Last Celebration:{" "}
-                    <strong className="text-[var(--ink)]">{customer.lastDate}</strong>
-                  </p>
-                </div>
-
-                {/* Allergies Notice */}
-                {hasAllergies && (
-                  <div className="mt-3 flex items-center gap-1.5 rounded-xl bg-red-50 p-2.5 text-[11.5px] font-bold text-red-800">
-                    <AlertTriangle size={14} className="shrink-0 text-red-600" />
-                    <span>Noted: {Array.from(customer.allergies).join(", ")}</span>
+                {/* Orders History Preview */}
+                {client.orders.length > 0 && (
+                  <div className="pt-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--ink-mute)] block mb-1.5">
+                      Recent Orders
+                    </span>
+                    <div className="space-y-1.5">
+                      {client.orders.map((o) => (
+                        <div
+                          key={o.id}
+                          onClick={() => {
+                            setSelectedOrder(o);
+                            setOrderDetailsOpen(true);
+                          }}
+                          className="flex items-center justify-between p-2 rounded-lg bg-white border border-[var(--hairline)] hover:border-[var(--terra)] cursor-pointer text-xs transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[var(--ink)]">{o.orderNumber}</span>
+                            <span className="text-[11px] text-[var(--ink-mute)]">
+                              {formatFullDate(o.date)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[var(--ink)]">
+                              {formatCurrency(o.total)}
+                            </span>
+                            <ChevronRight size={13} className="text-[var(--ink-mute)]" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-
-                {/* Past Orders Pill List */}
-                <div className="mt-4 border-t border-[oklch(0.92_0.016_68)] pt-3">
-                  <p className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-[var(--ink-mute)]">
-                    Order History ({customer.orderCount})
-                  </p>
-                  <div className="mt-2 space-y-1.5">
-                    {customer.orders.slice(0, 3).map((ord) => (
-                      <div key={ord.id} className="flex items-center justify-between text-[12px]">
-                        <span className="font-mono text-[10.5px] text-[var(--terra)]">{ord.number}</span>
-                        <span className="truncate max-w-[160px] text-[var(--ink-soft)]">{ord.title}</span>
-                        <span className="font-semibold text-[var(--ink)]">{currency(ord.total)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
+            );
+          })}
+        </div>
+      )}
 
-              {/* Total Spend Footer */}
-              <div className="mt-5 flex items-baseline justify-between border-t border-[oklch(0.92_0.016_68)] pt-3">
-                <span className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink-mute)]">
-                  Lifetime Value
-                </span>
-                <span className="font-display text-[22px] font-semibold text-[var(--ink)]">
-                  {currency(customer.totalSpent)}
-                </span>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+      {/* Detailed Order Modal */}
+      <DetailedOrderModal
+        order={selectedOrder}
+        open={orderDetailsOpen}
+        onOpenChange={setOrderDetailsOpen}
+      />
     </div>
   );
 }

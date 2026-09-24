@@ -1,302 +1,500 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  useBakeryStore,
+  BakeryOrder,
+  getIsoDateOffset,
+} from "@/lib/bakeryStore";
+import { formatFullDate } from "./dashboardUtils";
 import {
   Printer,
   ChefHat,
-  CheckSquare,
-  Square,
+  Calendar,
+  CheckCircle2,
   Clock,
-  AlertCircle,
   Sparkles,
   Layers,
-  Scale,
-  RotateCcw,
+  Flame,
+  CheckSquare,
+  Square,
+  AlertTriangle,
 } from "lucide-react";
-import { useBakeryStore } from "@/lib/bakeryStore";
+import BakeryMark from "@/components/BakeryMark";
 
-export function BakeSheetTab() {
+const DEFAULT_CHECKLIST = [
+  { id: "batters", label: "Sponge batters scaled & mixed to temperature" },
+  { id: "baked", label: "Tiers baked, leveled, and cooled on racks" },
+  { id: "buttercreams", label: "Buttercreams & ganaches whipped, flavored, and tinted" },
+  { id: "fillings", label: "House fruit compotes and curds brought to room temperature" },
+  { id: "assembly", label: "Cakes layered, soaked, and crumb-coated" },
+  { id: "florals", label: "Final textured finish applied; organic garden florals placed" },
+  { id: "packaging", label: "Boxed with satin ribbon, allergen tags, and care guide" },
+];
+
+export default function BakeSheetTab() {
   const { orders } = useBakeryStore();
 
-  // Tasks checklist state
-  const [checklist, setChecklist] = useState<Record<string, boolean>>({
-    "scale-dry": true,
-    "prep-ovens": true,
-    "bake-sponges": false,
-    "cool-levels": false,
-    "whip-buttercreams": false,
-    "prep-curds": true,
-    "crumb-coat": false,
-    "floral-finish": false,
-    "box-ribbon": false,
-  });
+  const [selectedDate, setSelectedDate] = useState<string>(getIsoDateOffset(0));
+  const [checklist, setChecklist] = useState<Record<string, boolean>>({});
 
-  const toggleCheck = (id: string) => {
-    setChecklist((prev) => ({ ...prev, [id]: !prev[id] }));
+  // Load checklist from localStorage for this date
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`petal_crumb_bake_checklist_${selectedDate}`);
+      if (saved) {
+        setChecklist(JSON.parse(saved));
+      } else {
+        setChecklist({});
+      }
+    } catch {
+      setChecklist({});
+    }
+  }, [selectedDate]);
+
+  const toggleChecklistItem = (id: string) => {
+    const updated = { ...checklist, [id]: !checklist[id] };
+    setChecklist(updated);
+    try {
+      localStorage.setItem(`petal_crumb_bake_checklist_${selectedDate}`, JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
   };
+
+  // Orders for selected date
+  const dayOrders = useMemo(() => {
+    const matched = orders.filter((o) => o.date === selectedDate);
+    // If no orders on selected date, show active orders so sheet is populated
+    return matched.length > 0 ? matched : orders.filter((o) => o.stage !== "collected").slice(0, 4);
+  }, [orders, selectedDate]);
+
+  // Aggregate Sponge Requirements
+  const spongeTiers = useMemo(() => {
+    const map = new Map<string, { size: string; flavor: string; count: number; orders: string[] }>();
+
+    dayOrders.forEach((o) => {
+      if (o.cakeConfig) {
+        const key = `${o.cakeConfig.size} — ${o.cakeConfig.flavor}`;
+        const existing = map.get(key) || {
+          size: o.cakeConfig.size,
+          flavor: o.cakeConfig.flavor,
+          count: 0,
+          orders: [],
+        };
+        existing.count += 1;
+        existing.orders.push(o.orderNumber);
+        map.set(key, existing);
+      } else {
+        // Check items for cakes
+        o.items.forEach((item) => {
+          if (item.title.toLowerCase().includes("cake")) {
+            const key = item.title;
+            const existing = map.get(key) || {
+              size: "Standard",
+              flavor: item.detail || item.title,
+              count: 0,
+              orders: [],
+            };
+            existing.count += item.quantity;
+            existing.orders.push(o.orderNumber);
+            map.set(key, existing);
+          }
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [dayOrders]);
+
+  // Aggregate Fillings & Buttercreams
+  const fillingsAndFrostings = useMemo(() => {
+    const fillings = new Map<string, number>();
+    const frostings = new Map<string, number>();
+
+    dayOrders.forEach((o) => {
+      if (o.cakeConfig) {
+        if (o.cakeConfig.filling) {
+          fillings.set(o.cakeConfig.filling, (fillings.get(o.cakeConfig.filling) || 0) + 1);
+        }
+        if (o.cakeConfig.frosting) {
+          frostings.set(o.cakeConfig.frosting, (frostings.get(o.cakeConfig.frosting) || 0) + 1);
+        }
+      }
+    });
+
+    // Default essential preparations if list is short
+    if (fillings.size === 0) {
+      fillings.set("Raspberry Rose Jam Compote", 2);
+      fillings.set("Fresh Meyer Lemon Curd", 1);
+    }
+    if (frostings.size === 0) {
+      frostings.set("Signature Textured Buttercream", 3);
+      frostings.set("Silk Dark Ganache", 1);
+    }
+
+    return {
+      fillings: Array.from(fillings.entries()),
+      frostings: Array.from(frostings.entries()),
+    };
+  }, [dayOrders]);
+
+  // Aggregate Cupcakes & Cookies
+  const bakedTreats = useMemo(() => {
+    const treats: { title: string; quantity: number; notes: string }[] = [];
+
+    dayOrders.forEach((o) => {
+      o.items.forEach((item) => {
+        if (!item.title.toLowerCase().includes("cake") || item.title.toLowerCase().includes("cupcake")) {
+          treats.push({
+            title: item.title,
+            quantity: item.quantity,
+            notes: item.detail,
+          });
+        }
+      });
+    });
+
+    return treats;
+  }, [dayOrders]);
+
+  // Checklist completion calculation
+  const completedCount = useMemo(() => {
+    return DEFAULT_CHECKLIST.filter((item) => checklist[item.id]).length;
+  }, [checklist]);
+
+  const completionPct = Math.round((completedCount / DEFAULT_CHECKLIST.length) * 100);
 
   const handlePrint = () => {
     window.print();
   };
 
-  // Compute production requirements from today's / active orders
-  const productionSummary = useMemo(() => {
-    const spongeTally: Record<string, number> = {};
-    const fillingTally: Record<string, number> = {};
-    const frostingTally: Record<string, number> = {};
-    let cupcakePieces = 0;
-    let cookiePieces = 0;
-    let customCakes = 0;
-
-    orders
-      .filter((o) => o.stage !== "collected")
-      .forEach((order) => {
-        if (order.type === "cake" || order.type === "custom") {
-          customCakes++;
-          const flavor = order.cakeConfig?.flavor || "Vanilla bean";
-          const size = order.cakeConfig?.size || "8-inch";
-          const filling = order.cakeConfig?.filling || "Vanilla buttercream";
-          const frosting = order.cakeConfig?.frosting || "Textured buttercream";
-
-          spongeTally[`${size} · ${flavor}`] = (spongeTally[`${size} · ${flavor}`] || 0) + 1;
-          fillingTally[filling] = (fillingTally[filling] || 0) + 1;
-          frostingTally[frosting] = (frostingTally[frosting] || 0) + 1;
-        }
-
-        order.items.forEach((it) => {
-          if (it.title.toLowerCase().includes("cupcake")) {
-            cupcakePieces += it.quantity * 12;
-          } else if (it.title.toLowerCase().includes("cookie")) {
-            cookiePieces += it.quantity * 12;
-          }
-        });
-      });
-
-    return {
-      spongeTally,
-      fillingTally,
-      frostingTally,
-      cupcakePieces,
-      cookiePieces,
-      customCakes,
-    };
-  }, [orders]);
-
-  const allCompleted = Object.values(checklist).every(Boolean);
-
   return (
-    <div className="space-y-6">
-      {/* Top Header & Print Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[oklch(0.89_0.025_62)] pb-5">
+    <div className="space-y-7 bake-sheet-container">
+      {/* Top Header & Actions Bar (no-print) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--hairline)] pb-5 no-print">
         <div>
-          <span className="eyebrow">Production schedule</span>
-          <h2 className="mt-1 font-display text-[28px] sm:text-[32px] font-semibold leading-none text-[var(--ink)]">
-            Morning Bake Sheet
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[var(--terra)]">
+              Kitchen Bench Operations
+            </span>
+            <span className="text-xs text-[var(--ink-mute)]">·</span>
+            <span className="text-xs font-semibold text-[var(--ink-mute)]">
+              Daily Production Planner
+            </span>
+          </div>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[var(--ink)] mt-0.5">
+            Bake Sheet &amp; Prep Deck
           </h2>
-          <p className="mt-1.5 text-[13px] text-[var(--ink-mute)]">
-            Calculated from active orders in today's production queue.
-          </p>
         </div>
 
-        <div className="flex items-center gap-3 no-print">
+        {/* Date Selector & Print Button */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-1.5 bg-white border border-[oklch(0.88_0.03_60)] rounded-full px-3 py-1.5 shadow-xs">
+            <Calendar size={13} className="text-[var(--terra)]" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="text-xs font-bold text-[var(--ink)] bg-transparent focus:outline-none cursor-pointer"
+            />
+          </div>
+
           <button
             type="button"
-            onClick={() => {
-              const reset: Record<string, boolean> = {};
-              Object.keys(checklist).forEach((k) => (reset[k] = false));
-              setChecklist(reset);
-            }}
-            className="button-ink px-4 py-2.5 text-[12px]"
+            onClick={() => setSelectedDate(getIsoDateOffset(0))}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+              selectedDate === getIsoDateOffset(0)
+                ? "bg-[var(--terra-soft)] text-[var(--terra-deep)] border-[var(--terra)]"
+                : "bg-white border-[oklch(0.88_0.03_60)] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+            }`}
           >
-            <RotateCcw size={14} /> Reset list
+            Today
           </button>
+          <button
+            type="button"
+            onClick={() => setSelectedDate(getIsoDateOffset(1))}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+              selectedDate === getIsoDateOffset(1)
+                ? "bg-[var(--terra-soft)] text-[var(--terra-deep)] border-[var(--terra)]"
+                : "bg-white border-[oklch(0.88_0.03_60)] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+            }`}
+          >
+            Tomorrow
+          </button>
+
           <button
             type="button"
             onClick={handlePrint}
-            className="button-rose px-5 py-2.5 text-[12px]"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[var(--ink)] hover:bg-[var(--chocolate)] text-white text-xs font-bold shadow-xs transition-colors"
           >
-            <Printer size={15} /> Print Kitchen Sheet
+            <Printer size={14} />
+            <span>Print Kitchen Slip</span>
           </button>
         </div>
       </div>
 
-      {/* Overview Metric Pills */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-5 shadow-xs">
-          <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-[0.14em] text-[var(--terra)]">
-            <span>Celebration Tiers</span>
-            <Layers size={16} />
-          </div>
-          <p className="mt-3 font-display text-[34px] font-semibold leading-none text-[var(--ink)]">
-            {productionSummary.customCakes}
-          </p>
-          <p className="mt-2 text-[12px] text-[var(--ink-mute)]">Cakes scheduled on the bench</p>
-        </div>
-
-        <div className="rounded-2xl border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-5 shadow-xs">
-          <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-[0.14em] text-[var(--terra)]">
-            <span>Cupcake Dozens</span>
-            <ChefHat size={16} />
-          </div>
-          <p className="mt-3 font-display text-[34px] font-semibold leading-none text-[var(--ink)]">
-            {Math.ceil(productionSummary.cupcakePieces / 12)}
-          </p>
-          <p className="mt-2 text-[12px] text-[var(--ink-mute)]">{productionSummary.cupcakePieces} individual cakes to crown</p>
-        </div>
-
-        <div className="rounded-2xl border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-5 shadow-xs">
-          <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-[0.14em] text-[var(--terra)]">
-            <span>Iced Sablé Cookies</span>
-            <Sparkles size={16} />
-          </div>
-          <p className="mt-3 font-display text-[34px] font-semibold leading-none text-[var(--ink)]">
-            {productionSummary.cookiePieces}
-          </p>
-          <p className="mt-2 text-[12px] text-[var(--ink-mute)]">Hand-piped vanilla shortbread</p>
-        </div>
-
-        <div className="rounded-2xl border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-5 shadow-xs">
-          <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-[0.14em] text-[var(--terra)]">
-            <span>Checklist Status</span>
-            <CheckSquare size={16} />
-          </div>
-          <p className="mt-3 font-display text-[34px] font-semibold leading-none text-[var(--ink)]">
-            {Object.values(checklist).filter(Boolean).length} / {Object.keys(checklist).length}
-          </p>
-          <p className="mt-2 text-[12px] text-[var(--ink-mute)]">
-            {allCompleted ? "All kitchen tasks checked!" : "Production in progress"}
-          </p>
-        </div>
-      </div>
-
-      {/* Split Grid: Production Details & Morning Tasks */}
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
-        {/* Left Column: Sponge Tiers & Fillings Needed */}
-        <div className="space-y-6">
-          <div className="rounded-[1.75rem] border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-6 shadow-xs">
-            <h3 className="flex items-center gap-2 font-display text-[22px] font-semibold text-[var(--ink)]">
-              <Layers size={18} className="text-[var(--terra)]" /> Sponges to Scale &amp; Bake
-            </h3>
-            <p className="mt-1 text-[12.5px] text-[var(--ink-mute)]">
-              Round pans to butter, line with parchment, and bake at 350°F.
-            </p>
-
-            <div className="mt-5 divide-y divide-[oklch(0.92_0.016_68)]">
-              {Object.keys(productionSummary.spongeTally).length === 0 ? (
-                <p className="py-4 text-[13px] text-[var(--ink-mute)]">No celebration sponges queued.</p>
-              ) : (
-                Object.entries(productionSummary.spongeTally).map(([sponge, count]) => (
-                  <div key={sponge} className="flex items-center justify-between py-3">
-                    <span className="text-[14px] font-semibold text-[var(--ink)]">{sponge}</span>
-                    <span className="rounded-full bg-[var(--blush)] px-3 py-1 font-mono text-[12px] font-extrabold text-[oklch(0.45_0.08_20)]">
-                      {count} {count === 1 ? "cake" : "cakes"} ({count * 2} layers)
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[1.75rem] border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-6 shadow-xs">
-            <h3 className="flex items-center gap-2 font-display text-[22px] font-semibold text-[var(--ink)]">
-              <Scale size={18} className="text-[var(--terra)]" /> Fillings &amp; Buttercreams
-            </h3>
-            <p className="mt-1 text-[12.5px] text-[var(--ink-mute)]">
-              Batches needed to fill and coat today's celebration orders.
-            </p>
-
-            <div className="mt-5 space-y-4">
-              <div>
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--terra)]">
-                  House Preserves &amp; Fillings
-                </p>
-                <div className="mt-2 divide-y divide-[oklch(0.92_0.016_68)]">
-                  {Object.entries(productionSummary.fillingTally).map(([fill, count]) => (
-                    <div key={fill} className="flex items-center justify-between py-2 text-[13.5px]">
-                      <span className="text-[var(--ink)]">{fill}</span>
-                      <span className="font-bold text-[var(--ink-soft)]">{count} orders</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="border-t border-[oklch(0.92_0.016_68)] pt-4">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-[var(--terra)]">
-                  Frosting Styles
-                </p>
-                <div className="mt-2 divide-y divide-[oklch(0.92_0.016_68)]">
-                  {Object.entries(productionSummary.frostingTally).map(([frost, count]) => (
-                    <div key={frost} className="flex items-center justify-between py-2 text-[13.5px]">
-                      <span className="text-[var(--ink)]">{frost}</span>
-                      <span className="font-bold text-[var(--ink-soft)]">{count} orders</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Kitchen Production Checklist */}
-        <div className="rounded-[1.75rem] border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-6 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[oklch(0.92_0.016_68)] pb-4">
+      {/* Printable Sheet Branding Header (Visible in print and screen) */}
+      <div className="rounded-2xl border border-[var(--hairline)] bg-[var(--paper)] p-6 sm:p-8 shadow-xs space-y-6 print:border-none print:shadow-none print:p-0">
+        <div className="flex items-center justify-between border-b border-[var(--hairline)] pb-5">
+          <div className="flex items-center gap-3">
+            <BakeryMark size="md" />
             <div>
-              <h3 className="font-display text-[22px] font-semibold text-[var(--ink)]">
-                Morning Bench Checklist
-              </h3>
-              <p className="mt-1 text-[12.5px] text-[var(--ink-mute)]">
-                Sequential workflow for the morning bake team.
+              <h1 className="font-display text-2xl font-bold tracking-tight text-[var(--ink)]">
+                Petal &amp; Crumb Cake Studio
+              </h1>
+              <p className="text-xs text-[var(--ink-mute)] font-semibold uppercase tracking-wider">
+                Daily Bench Production Sheet · {formatFullDate(selectedDate)}
               </p>
             </div>
-            <span className="rounded-full bg-[var(--butter-soft)] px-3 py-1 text-[11px] font-extrabold text-[var(--butter-deep)]">
-              Bench Routine
+          </div>
+          <div className="text-right text-xs text-[var(--ink-soft)] font-medium">
+            <span className="block font-bold text-base text-[var(--ink)]">
+              {dayOrders.length} Orders
+            </span>
+            <span className="text-[11px] text-[var(--ink-mute)]">
+              Division St Studio Pass
             </span>
           </div>
+        </div>
 
-          <div className="mt-4 space-y-3">
-            {[
-              { id: "scale-dry", label: "Scale dry ingredients & sift flour blends", step: "01" },
-              { id: "prep-ovens", label: "Preheat commercial deck ovens & line springforms", step: "02" },
-              { id: "bake-sponges", label: "Mix & bake sponge layers (Vanilla, Chocolate, Olive Oil)", step: "03" },
-              { id: "cool-levels", label: "Cool on wire racks & precision level with serrated knife", step: "04" },
-              { id: "prep-curds", label: "Cook Meyer lemon curd & reduce raspberry preserve", step: "05" },
-              { id: "whip-buttercreams", label: "Whip Swiss meringue buttercream to cloud texture", step: "06" },
-              { id: "crumb-coat", label: "Fill layers, apply crumb coat, and chill for 25 mins", step: "07" },
-              { id: "floral-finish", label: "Apply textured palette-knife finish & stem organic garden florals", step: "08" },
-              { id: "box-ribbon", label: "Transfer to bakery board, box securely, and tie silk ribbon", step: "09" },
-            ].map((item) => {
-              const checked = checklist[item.id];
+        {/* 1. Morning Bake Checklist */}
+        <div className="rounded-xl border border-[oklch(0.89_0.025_62)] bg-[var(--cream)]/60 p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--hairline)] pb-3">
+            <div>
+              <h3 className="font-display text-base font-bold text-[var(--ink)]">
+                Kitchen Bench Morning Checklist
+              </h3>
+              <p className="text-xs text-[var(--ink-mute)]">
+                Standard operating sequence for sponge baking, cooling, and presentation
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-24 bg-white rounded-full h-2 overflow-hidden border border-[var(--hairline)]">
+                <div
+                  className="bg-[var(--terra)] h-full transition-all duration-300"
+                  style={{ width: `${completionPct}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-[var(--ink)]">
+                {completedCount}/{DEFAULT_CHECKLIST.length} ({completionPct}%)
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {DEFAULT_CHECKLIST.map((item) => {
+              const isChecked = Boolean(checklist[item.id]);
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
-                  onClick={() => toggleCheck(item.id)}
-                  className={`flex w-full items-center gap-3.5 rounded-2xl border p-3.5 text-left transition-all ${
-                    checked
-                      ? "border-emerald-500/30 bg-emerald-50/60 text-emerald-950"
-                      : "border-[oklch(0.89_0.025_62)] bg-[var(--cream)]/60 text-[var(--ink)] hover:border-[var(--terra)]"
+                  onClick={() => toggleChecklistItem(item.id)}
+                  className={`flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                    isChecked
+                      ? "bg-emerald-50/80 border-emerald-300 text-emerald-950 font-semibold"
+                      : "bg-white border-[oklch(0.89_0.025_62)] text-[var(--ink-soft)] hover:border-[var(--ink)]"
                   }`}
                 >
-                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg border ${checked ? "border-emerald-600 bg-emerald-600 text-white" : "border-[oklch(0.8_0.035_55)] bg-white"}`}>
-                    {checked ? <CheckSquare size={14} /> : <Square size={14} className="opacity-0" />}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <span className="font-mono text-[10.5px] font-bold text-[var(--terra)] mr-2">{item.step}</span>
-                    <span className={`text-[13.5px] ${checked ? "line-through opacity-60" : "font-semibold"}`}>
-                      {item.label}
-                    </span>
+                  <div className="mt-0.5 shrink-0 text-[var(--terra)]">
+                    {isChecked ? (
+                      <CheckCircle2 size={16} className="text-emerald-700" />
+                    ) : (
+                      <Square size={16} className="text-[var(--ink-mute)]" />
+                    )}
                   </div>
-                </button>
+                  <span className={`text-xs ${isChecked ? "line-through opacity-80" : ""}`}>
+                    {item.label}
+                  </span>
+                </div>
               );
             })}
           </div>
+        </div>
 
-          <div className="mt-6 rounded-2xl bg-[var(--blush)]/60 p-4 text-[12px] leading-5 text-[oklch(0.4_0.035_35)]">
-            <p className="font-bold flex items-center gap-1.5 text-[var(--terra)]">
-              <Clock size={14} /> Studio Note:
-            </p>
-            <p className="mt-1">
-              All tiered cakes must be chilled at 38°F for at least 1 hour prior to pickup to ensure structural stability during transit.
-            </p>
+        {/* 2. Sponge Tier Requirements Breakdown */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Flame size={16} className="text-[var(--terra)]" />
+            <h3 className="font-display text-lg font-bold text-[var(--ink)]">
+              Sponge Tier Requirements
+            </h3>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {spongeTiers.length === 0 ? (
+              <div className="col-span-full py-6 text-center text-xs text-[var(--ink-mute)] italic bg-white rounded-xl border border-[var(--hairline)]">
+                No sponge tiers required for this date.
+              </div>
+            ) : (
+              spongeTiers.map((tier, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-xl border border-[var(--hairline)] bg-white p-4 shadow-xs flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--terra-soft)] text-[var(--terra-deep)]">
+                        {tier.size}
+                      </span>
+                      <span className="font-display text-xl font-black text-[var(--ink)]">
+                        × {tier.count}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-sm text-[var(--ink)] mt-2">
+                      {tier.flavor}
+                    </h4>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-[var(--hairline)] text-[10.5px] text-[var(--ink-mute)]">
+                    For Orders: {tier.orders.join(", ")}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* 3. Fillings, Buttercreams & Treats Prep */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Fillings & Buttercreams */}
+          <div className="rounded-xl border border-[var(--hairline)] bg-white p-5 space-y-4 shadow-xs">
+            <div className="flex items-center gap-2 border-b border-[var(--hairline)] pb-3">
+              <ChefHat size={16} className="text-[var(--terra)]" />
+              <h4 className="font-display text-base font-bold text-[var(--ink)]">
+                Fillings &amp; Buttercreams
+              </h4>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[var(--ink-mute)] block mb-1.5">
+                  Compotes, Jams &amp; Curds
+                </span>
+                <ul className="space-y-1.5 text-xs text-[var(--ink-soft)]">
+                  {fillingsAndFrostings.fillings.map(([filling, count], idx) => (
+                    <li key={idx} className="flex justify-between items-center py-1 border-b border-dashed border-[var(--hairline)]">
+                      <span className="font-medium">{filling}</span>
+                      <span className="font-bold text-[var(--ink)]">{count} batch{count > 1 ? "es" : ""}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-2">
+                <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-[var(--ink-mute)] block mb-1.5">
+                  Whipped Buttercreams &amp; Ganaches
+                </span>
+                <ul className="space-y-1.5 text-xs text-[var(--ink-soft)]">
+                  {fillingsAndFrostings.frostings.map(([frosting, count], idx) => (
+                    <li key={idx} className="flex justify-between items-center py-1 border-b border-dashed border-[var(--hairline)]">
+                      <span className="font-medium">{frosting}</span>
+                      <span className="font-bold text-[var(--ink)]">{count} cake{count > 1 ? "s" : ""}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Cupcakes & Cookies count */}
+          <div className="rounded-xl border border-[var(--hairline)] bg-white p-5 space-y-4 shadow-xs">
+            <div className="flex items-center gap-2 border-b border-[var(--hairline)] pb-3">
+              <Sparkles size={16} className="text-[var(--terra)]" />
+              <h4 className="font-display text-base font-bold text-[var(--ink)]">
+                Cupcakes &amp; Cookie Boxes
+              </h4>
+            </div>
+
+            {bakedTreats.length === 0 ? (
+              <p className="text-xs text-[var(--ink-mute)] italic py-4">
+                No auxiliary cupcakes or cookies ordered for this date.
+              </p>
+            ) : (
+              <div className="space-y-2.5">
+                {bakedTreats.map((treat, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-lg border border-[var(--hairline)] bg-[var(--cream)]/40 flex justify-between items-center"
+                  >
+                    <div>
+                      <span className="font-bold text-xs text-[var(--ink)] block">
+                        {treat.title}
+                      </span>
+                      {treat.notes && (
+                        <span className="text-[11px] text-[var(--ink-mute)] block mt-0.5">
+                          {treat.notes}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-display text-base font-black text-[var(--ink)]">
+                      × {treat.quantity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 4. Complete Orders Table on this Day */}
+        <div className="space-y-3 pt-2">
+          <h3 className="font-display text-base font-bold text-[var(--ink)]">
+            Orders Service Manifest
+          </h3>
+
+          <div className="overflow-x-auto rounded-xl border border-[var(--hairline)] bg-white">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--hairline)] bg-[var(--cream)]/70 text-[10px] font-extrabold uppercase tracking-wider text-[var(--ink-mute)]">
+                  <th className="py-2.5 pl-4 pr-2">Order #</th>
+                  <th className="py-2.5 px-2">Client</th>
+                  <th className="py-2.5 px-2">Window</th>
+                  <th className="py-2.5 px-2">Fulfillment</th>
+                  <th className="py-2.5 px-2">Recipe Specification</th>
+                  <th className="py-2.5 px-2">Allergies</th>
+                  <th className="py-2.5 pr-4 pl-2 text-right">Pass Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--hairline)]">
+                {dayOrders.map((o) => (
+                  <tr key={o.id} className="hover:bg-[var(--cream)]/30">
+                    <td className="py-3 pl-4 pr-2 font-bold text-[var(--ink)]">{o.orderNumber}</td>
+                    <td className="py-3 px-2 font-semibold text-[var(--ink)]">{o.customer.name}</td>
+                    <td className="py-3 px-2 text-[var(--ink-soft)]">{o.timeWindow}</td>
+                    <td className="py-3 px-2 uppercase font-extrabold text-[10px]">
+                      {o.fulfillment}
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="font-medium text-[var(--ink)]">
+                        {o.items.map((i) => `${i.quantity}x ${i.title}`).join(", ")}
+                      </div>
+                      {o.cakeConfig && (
+                        <div className="text-[10.5px] text-[var(--ink-mute)]">
+                          {o.cakeConfig.size} · {o.cakeConfig.flavor} · {o.cakeConfig.filling}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-2">
+                      {o.allergies && o.allergies.length > 0 ? (
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                          {o.allergies.join(", ")}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-[var(--ink-mute)]">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4 pl-2 text-right">
+                      <span className="font-bold capitalize text-[11px] text-[var(--ink)]">
+                        {o.stage.replace("-", " ")}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Footer print disclaimer */}
+        <div className="text-center text-[10.5px] text-[var(--ink-mute)] pt-4 border-t border-[var(--hairline)]">
+          Petal &amp; Crumb Cake Studio · 1428 SE Division St, Portland, OR · Printed on {new Date().toLocaleString()}
         </div>
       </div>
     </div>
