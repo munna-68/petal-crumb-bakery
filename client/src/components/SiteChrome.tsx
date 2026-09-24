@@ -1,9 +1,28 @@
 /**
  * Garden Bakery: bright, warm chrome. Sentence-case nav, ghost icon buttons,
  * terracotta pill CTA, chocolate footer with script accents. All interactions
- * (search, favorites, bag, account, mobile drawer) preserved.
+ * (search, favorites, bag, account, mobile drawer, announcement banner, and My Orders) connected.
  */
-import { Instagram, Menu, X, ArrowUpRight, Search, ShoppingBag, Heart, User, LogIn, Package, Mail } from "lucide-react";
+import {
+  Instagram,
+  Menu,
+  X,
+  ArrowUpRight,
+  Search,
+  ShoppingBag,
+  Heart,
+  User,
+  LogIn,
+  Package,
+  Mail,
+  ChefHat,
+  ArrowRight,
+  CalendarDays,
+  MapPin,
+  Clock3,
+  Printer,
+  Sparkles,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
@@ -21,6 +40,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { useBakeryStore, type BakeryOrder, type OrderStage } from "@/lib/bakeryStore";
 
 const navItems = [
   { label: "Menu", href: "/menu" },
@@ -30,15 +57,23 @@ const navItems = [
   { label: "Contact", href: "/contact" },
 ];
 
+const currency = (n: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [myOrdersOpen, setMyOrdersOpen] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
   const [location] = useLocation();
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+
   const { count: bagCount, setIsOpen: setBagOpen } = useCart();
   const { count: favCount } = useFavorites();
+  const { settings, orders, stats } = useBakeryStore();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -70,11 +105,55 @@ export function SiteHeader() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Listen for open-my-orders event
+  useEffect(() => {
+    const handleOpenMyOrders = () => {
+      setMyOrdersOpen(true);
+    };
+    window.addEventListener("open-my-orders", handleOpenMyOrders);
+    return () => window.removeEventListener("open-my-orders", handleOpenMyOrders);
+  }, []);
+
   const iconBtn =
     "grid h-11 w-11 min-h-[44px] min-w-[44px] place-items-center rounded-full text-[var(--ink-soft)] transition-colors hover:bg-[var(--blush)]/70 hover:text-[var(--ink)]";
 
+  const showAnnouncement = settings.announcement?.active && !bannerDismissed;
+
   return (
     <>
+      {/* Top Announcement Banner */}
+      {showAnnouncement && (
+        <aside
+          aria-label="Announcement"
+          className="relative z-50 border-b border-[oklch(0.88_0.025_60)] bg-[var(--blush)] px-4 py-2.5 text-center text-[12.5px] leading-5 text-[oklch(0.35_0.04_30)] shadow-sm"
+        >
+          <div className="container flex flex-wrap items-center justify-center gap-2 pr-8 sm:pr-0">
+            {settings.announcement.badge && (
+              <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[var(--terra)] shadow-xs">
+                {settings.announcement.badge}
+              </span>
+            )}
+            <span className="font-semibold">{settings.announcement.message}</span>
+            {settings.announcement.linkText && settings.announcement.linkUrl && (
+              <Link
+                href={settings.announcement.linkUrl}
+                className="inline-flex items-center gap-1 font-extrabold text-[var(--terra)] underline decoration-[var(--terra)]/40 underline-offset-4 hover:decoration-[var(--terra)]"
+              >
+                {settings.announcement.linkText} <ArrowRight size={13} strokeWidth={2.2} />
+              </Link>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setBannerDismissed(true)}
+            aria-label="Dismiss banner"
+            className="absolute right-3 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-full text-[var(--ink-mute)] transition-colors hover:bg-white/70 hover:text-[var(--ink)]"
+          >
+            <X size={15} />
+          </button>
+        </aside>
+      )}
+
       <header
         className={`site-header sticky top-0 z-50 border-b backdrop-blur-[10px] transition-[box-shadow,background-color,border-color] duration-300 ${
           scrolled
@@ -122,7 +201,22 @@ export function SiteHeader() {
             })}
           </nav>
 
-          <div className="flex items-center gap-0.5 sm:gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1.5">
+            {/* Baker Dashboard / Studio Portal Discreet Button on Desktop */}
+            <Link
+              href="/dashboard"
+              className="relative hidden xl:inline-flex items-center gap-2 rounded-full border border-[oklch(0.86_0.025_60)] bg-[var(--paper)] px-3.5 py-1.5 text-[12px] font-bold text-[var(--ink-soft)] transition-colors hover:border-[var(--terra)] hover:text-[var(--terra)]"
+              title="Baker Dashboard & Kitchen Studio Portal"
+            >
+              <ChefHat size={15} className="text-[var(--terra)]" />
+              <span>Studio Portal</span>
+              {stats.activeOrdersCount > 0 && (
+                <span className="grid h-4 min-w-4 place-items-center rounded-full bg-[var(--terra)] px-1 text-[9px] font-extrabold leading-none text-white">
+                  {stats.activeOrdersCount}
+                </span>
+              )}
+            </Link>
+
             <button
               aria-label="Search cakes, flavors, and studio"
               onClick={() => setSearchOpen(true)}
@@ -166,30 +260,41 @@ export function SiteHeader() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 rounded-2xl border-[oklch(0.885_0.028_60)] bg-[var(--paper)] p-0 shadow-[0_24px_60px_oklch(0.305_0.033_42/0.14)]">
                 <DropdownMenuLabel className="px-4 py-3.5">
-                  <p className="font-display text-[16px] font-semibold leading-none">Hello, guest</p>
-                  <p className="mt-1.5 text-[11.5px] font-normal leading-4 text-[var(--ink-mute)]">Portfolio demo — no sign-in required</p>
+                  <p className="font-display text-[16px] font-semibold leading-none">Studio Client</p>
+                  <p className="mt-1.5 text-[11.5px] font-normal leading-4 text-[var(--ink-mute)]">Track active custom bakes &amp; bag</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => toast.success("Signed in — demo", { description: "In production this would open authentication. For the portfolio, everything is mocked locally." })}
-                  className="gap-2.5 rounded-none px-4 py-2.5 text-[13px]"
+                  onClick={() => setMyOrdersOpen(true)}
+                  className="gap-2.5 rounded-none px-4 py-2.5 text-[13px] cursor-pointer"
                 >
-                  <LogIn size={15} className="text-[var(--terra)]" /> Sign in (demo)
+                  <Package size={15} className="text-[var(--terra)]" />
+                  <span className="flex-1">My Orders</span>
+                  <span className="rounded-full bg-[var(--cream)] px-2 py-0.5 text-[10px] font-extrabold text-[var(--terra)]">
+                    {orders.length}
+                  </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setBagOpen(true)} className="gap-2.5 rounded-none px-4 py-2.5 text-[13px]">
+                <DropdownMenuItem onClick={() => setBagOpen(true)} className="gap-2.5 rounded-none px-4 py-2.5 text-[13px] cursor-pointer">
                   <ShoppingBag size={15} className="text-[var(--terra)]" /> Bag · {bagCount} items
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => toast("Wishlist — see Gallery hearts", { description: `You have ${favCount} favorites saved locally.` })}
-                  className="gap-2.5 rounded-none px-4 py-2.5 text-[13px]"
+                  className="gap-2.5 rounded-none px-4 py-2.5 text-[13px] cursor-pointer"
                 >
                   <Heart size={15} className="text-[var(--terra)]" /> Wishlist · {favCount}
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => toast("Orders — demo", { description: "In production this would list past custom orders. Try the live studio for a full flow." })}
-                  className="gap-2.5 rounded-none px-4 py-2.5 text-[13px]"
-                >
-                  <Package size={15} className="text-[var(--terra)]" /> Orders
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="gap-2.5 rounded-none px-4 py-2.5 text-[13px] cursor-pointer">
+                  <Link href="/dashboard" className="flex items-center justify-between w-full">
+                    <span className="flex items-center gap-2">
+                      <ChefHat size={15} className="text-[var(--terra)]" /> Baker Dashboard
+                    </span>
+                    {stats.activeOrdersCount > 0 && (
+                      <span className="rounded-full bg-[var(--terra)] px-1.5 py-0.5 text-[9.5px] font-extrabold text-white">
+                        {stats.activeOrdersCount}
+                      </span>
+                    )}
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <div className="px-4 py-3.5">
@@ -257,6 +362,41 @@ export function SiteHeader() {
               );
             })}
 
+            {/* My Orders in Mobile Nav */}
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setMyOrdersOpen(true);
+              }}
+              className="flex min-h-[52px] items-center justify-between border-b border-[oklch(0.9_0.02_65)] text-[17px] font-bold text-[var(--ink)] hover:text-[var(--terra)]"
+            >
+              <span className="flex items-center gap-2">
+                <Package size={17} className="text-[var(--terra)]" /> My Placed Orders
+              </span>
+              <span className="rounded-full bg-[var(--blush)] px-2.5 py-0.5 text-[11px] font-extrabold text-[var(--terra)]">
+                {orders.length}
+              </span>
+            </button>
+
+            {/* Baker Dashboard in Mobile Nav */}
+            <Link
+              href="/dashboard"
+              onClick={() => setOpen(false)}
+              className="flex min-h-[52px] items-center justify-between border-b border-[oklch(0.9_0.02_65)] text-[17px] font-bold text-[var(--ink)] hover:text-[var(--terra)]"
+            >
+              <span className="flex items-center gap-2.5">
+                <ChefHat size={18} className="text-[var(--terra)]" /> Baker Studio Portal
+              </span>
+              {stats.activeOrdersCount > 0 ? (
+                <span className="rounded-full bg-[var(--terra)] px-2.5 py-0.5 text-[10px] font-extrabold text-white">
+                  {stats.activeOrdersCount} active
+                </span>
+              ) : (
+                <ArrowUpRight size={17} className="opacity-40" />
+              )}
+            </Link>
+
             <Link
               href="/custom-order"
               onClick={() => setOpen(false)}
@@ -289,7 +429,139 @@ export function SiteHeader() {
 
       <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
       <CartDrawer />
+      <MyOrdersModal open={myOrdersOpen} onOpenChange={setMyOrdersOpen} />
     </>
+  );
+}
+
+const getStageBadgeInfo = (stage: OrderStage) => {
+  switch (stage) {
+    case "to-make":
+      return { label: "To Make", badgeClass: "bg-[var(--butter-soft)] text-[oklch(0.48_0.08_70)]" };
+    case "in-oven":
+      return { label: "In Oven", badgeClass: "bg-[var(--blush)] text-[var(--terra)]" };
+    case "ready":
+      return { label: "Ready for Pickup", badgeClass: "bg-[var(--sage-soft)] text-[var(--sage-deep)]" };
+    case "collected":
+      return { label: "Handed Over", badgeClass: "bg-[oklch(0.92_0.012_70)] text-[var(--ink-mute)]" };
+  }
+};
+
+function MyOrdersModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const { orders } = useBakeryStore();
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[92dvh] max-w-[700px] overflow-y-auto rounded-[2rem] border-[oklch(0.885_0.028_60)] bg-[var(--cream)] p-6 sm:p-8">
+        <DialogHeader className="text-left border-b border-[oklch(0.9_0.022_65)] pb-4">
+          <div className="flex items-center gap-2 text-[10.5px] font-extrabold uppercase tracking-[0.14em] text-[var(--terra)]">
+            <Package size={14} /> My Studio Orders
+          </div>
+          <DialogTitle className="mt-1 font-display text-[28px] sm:text-[32px] font-semibold leading-tight">
+            Order Status &amp; Receipts
+          </DialogTitle>
+          <DialogDescription className="text-[13px] text-[var(--ink-mute)]">
+            Live progress as our bakers handcraft and prepare your table celebration.
+          </DialogDescription>
+        </DialogHeader>
+
+        {orders.length === 0 ? (
+          <div className="py-12 text-center">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[var(--blush)] text-[var(--terra)]">
+              <Package size={24} />
+            </span>
+            <p className="mt-4 font-display text-[22px] font-semibold">No placed orders yet</p>
+            <p className="mt-2 text-[13px] text-[var(--ink-mute)]">
+              Build a celebration cake or browse the menu to place an order.
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Link href="/custom-order" onClick={() => onOpenChange(false)} className="button-rose px-5 py-3 text-[12.5px]">
+                Build Custom Cake
+              </Link>
+              <Link href="/menu" onClick={() => onOpenChange(false)} className="button-ink px-5 py-3 text-[12.5px]">
+                Explore Menu
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6 space-y-4">
+            {orders.map((order) => {
+              const stageInfo = getStageBadgeInfo(order.stage);
+              return (
+                <div
+                  key={order.id}
+                  className="rounded-2xl border border-[oklch(0.89_0.025_62)] bg-[var(--paper)] p-5 shadow-sm transition-all"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[oklch(0.92_0.015_60)] pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[14px] font-bold text-[var(--ink)]">{order.orderNumber}</span>
+                      <span className="text-[11.5px] text-[var(--ink-mute)]">· {order.source}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide ${stageInfo.badgeClass}`}
+                      >
+                        {stageInfo.label}
+                      </span>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                          order.payment === "paid" ? "bg-[var(--sage-soft)] text-[var(--sage-deep)]" : "bg-[var(--butter-soft)] text-[oklch(0.48_0.08_70)]"
+                        }`}
+                      >
+                        {order.payment === "paid" ? "Paid in full" : `Deposit paid (${currency(order.deposit)})`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-3.5 space-y-2 text-[13px]">
+                    <div className="divide-y divide-[oklch(0.94_0.01_60)]">
+                      {order.items.map((it, idx) => (
+                        <div key={idx} className="flex justify-between py-1.5">
+                          <div>
+                            <span className="font-semibold text-[var(--ink)]">{it.quantity}x {it.title}</span>
+                            {it.detail && <p className="text-[11.5px] text-[var(--ink-mute)]">{it.detail}</p>}
+                          </div>
+                          <span className="font-bold">{currency(it.price)}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-3 grid gap-2 pt-2 border-t border-[oklch(0.92_0.015_60)] text-[12px] text-[var(--ink-mute)] sm:grid-cols-2">
+                      <p className="flex items-center gap-2">
+                        <CalendarDays size={13} className="text-[var(--terra)]" /> {order.date} ({order.timeWindow})
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <MapPin size={13} className="text-[var(--terra)]" />
+                        {order.fulfillment === "delivery" ? `Delivery: ${order.customer.address || "Portland"}` : "Studio Pickup (417 SE 8th Ave)"}
+                      </p>
+                    </div>
+
+                    {order.balance > 0 && (
+                      <p className="text-[12px] font-bold text-[var(--terra)] pt-1">
+                        Remaining balance due: {currency(order.balance)} (settled prior to fulfillment)
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-[oklch(0.92_0.015_60)]">
+                    <span className="text-[11px] text-[var(--ink-mute)]">
+                      For: {order.customer.name} ({order.customer.email})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[oklch(0.86_0.02_52)] bg-white px-3 py-1.5 text-[11px] font-bold text-[var(--ink)] hover:bg-[var(--cream)]"
+                    >
+                      <Printer size={12} /> Print Receipt
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -336,6 +608,8 @@ function NewsletterForm() {
 }
 
 export function SiteFooter() {
+  const { stats } = useBakeryStore();
+
   return (
     <footer className="bg-[var(--chocolate)] text-[oklch(0.95_0.012_78)]">
       {/* newsletter strip */}
@@ -385,9 +659,24 @@ export function SiteFooter() {
                   <span className="text-[11.5px] font-medium text-[oklch(0.72_0.02_60)] group-hover:text-white/80">{l.desc}</span>
                 </Link>
               ))}
-              <Link href="/custom-order" className="group mt-4 inline-flex items-center gap-2 self-start rounded-full bg-[var(--terra)] px-4 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[oklch(0.66_0.115_27)]">
-                Build a custom cake <ArrowUpRight size={14} />
-              </Link>
+              <div className="mt-4 flex flex-col gap-2">
+                <Link href="/custom-order" className="group inline-flex items-center gap-2 self-start rounded-full bg-[var(--terra)] px-4 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[oklch(0.66_0.115_27)]">
+                  Build a custom cake <ArrowUpRight size={14} />
+                </Link>
+                {/* Discreet Baker Dashboard / Studio Portal Link in Footer */}
+                <Link
+                  href="/dashboard"
+                  className="group inline-flex items-center gap-2 self-start rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[12px] font-bold text-white transition-colors hover:bg-white/20"
+                >
+                  <ChefHat size={14} className="text-[oklch(0.82_0.07_28)]" />
+                  Baker Dashboard / Portal
+                  {stats.activeOrdersCount > 0 && (
+                    <span className="rounded-full bg-[var(--terra)] px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                      {stats.activeOrdersCount}
+                    </span>
+                  )}
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -404,7 +693,7 @@ export function SiteFooter() {
               <br />
               Studio pickup + local delivery
               <br />
-              <span className="text-[11.5px] text-[oklch(0.72_0.02_60)]">Replies within a day · Tue–Sat</span>
+              <span className="text-[11.5px] text-[oklch(0.72_0.02_60)]">Replies within 24h · Tue–Sat</span>
             </p>
             <button
               onClick={() => toast.success("Instagram — portfolio demo", { description: "In production this would open @petalandcrumb. For now, explore the Gallery." })}

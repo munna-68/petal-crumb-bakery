@@ -1,63 +1,44 @@
-/** Garden Bakery: seasonal menu — pill filters, rounded tiles, terra buttons. All interactions preserved. */
+/** Garden Bakery: seasonal menu — connected to useBakeryStore dynamic items, live stock & sold-out badges. */
 import { useMemo, useState } from "react";
-import { ArrowUpRight, Leaf, Sparkles, Heart, ShoppingBag, Eye, Minus, Plus, Share2, Info } from "lucide-react";
+import { ArrowUpRight, Leaf, Sparkles, Heart, ShoppingBag, Minus, Plus, Share2, Info, Ban } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 import { SiteFooter, SiteHeader } from "@/components/SiteChrome";
-import { menuItems } from "@/lib/bakeryData";
+import { useBakeryStore, type MenuItem } from "@/lib/bakeryStore";
 import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScriptNote, ButterBlob, LeafSprig, HeartDoodle } from "@/components/decor";
+import { ButterBlob, LeafSprig, HeartDoodle, ScriptNote } from "@/components/decor";
 
-/* enrich menu data for portfolio demo */
-const enriched = menuItems.map((item, idx) => {
-  const prices: Record<string, number> = { "Signature cake": 84, "Petite cake": 54, "Cupcake dozen": 42, "Decorated cookies": 34 };
-  const price = prices[item.title] ?? 42;
-  return {
-    ...item,
-    id: `menu-${idx}-${item.title.toLowerCase().replace(/\s+/g, "-")}`,
-    priceNum: price,
-    priceLabel: `from $${price}`,
-    allergens: idx === 0 ? ["Wheat", "Dairy", "Eggs"] : idx === 1 ? ["Wheat", "Dairy"] : idx === 2 ? ["Wheat", "Dairy", "Eggs"] : ["Wheat", "Dairy", "Eggs", "Soy"],
-    story:
-      idx === 0
-        ? "Our most-requested centerpiece. Vanilla bean or dark chocolate, raspberry or salted caramel, finished in textured buttercream with seasonal blooms."
-        : idx === 1
-          ? "A six-inch cake for the sweetest tables of 4–8. Ideal for weeknight celebrations and studio pickup."
-          : idx === 2
-            ? "Twelve cupcakes in two complementary seasonal flavors. Floral crowns, cloud-soft crumb."
-            : "Buttery vanilla sablé, iced one by one. Perfect as favors or a giftable dozen.",
-    serves: idx === 0 ? "Serves 12–16" : idx === 1 ? "Serves 6–8" : idx === 2 ? "12 per box" : "12 per box",
-  };
-});
-
-const filterOptions = ["All", "Cakes", "Cupcakes", "Cookies"] as const;
+const filterOptions = ["All", "Cakes", "Cupcakes", "Cookies", "Seasonal"] as const;
 
 export default function Menu() {
+  const { menuItems } = useBakeryStore();
   const [filter, setFilter] = useState<(typeof filterOptions)[number]>("All");
-  const [quick, setQuick] = useState<(typeof enriched)[number] | null>(null);
+  const [quick, setQuick] = useState<MenuItem | null>(null);
   const [qty, setQty] = useState(1);
   const { addItem } = useCart();
   const { toggle, isFavorite } = useFavorites();
 
   const visible = useMemo(() => {
-    if (filter === "All") return enriched;
-    if (filter === "Cakes") return enriched.filter((m) => m.title.toLowerCase().includes("cake"));
-    if (filter === "Cupcakes") return enriched.filter((m) => m.title.toLowerCase().includes("cupcake"));
-    return enriched.filter((m) => m.title.toLowerCase().includes("cookie"));
-  }, [filter]);
+    if (filter === "All") return menuItems;
+    return menuItems.filter((m) => m.category === filter);
+  }, [filter, menuItems]);
 
-  const openQuick = (item: (typeof enriched)[number]) => {
+  const openQuick = (item: MenuItem) => {
     setQuick(item);
     setQty(1);
   };
 
-  const handleAdd = (item: (typeof enriched)[number], quantity = 1) => {
+  const handleAdd = (item: MenuItem, quantity = 1) => {
+    if (item.isSoldOut || item.stock === 0) {
+      toast.error(`${item.title} is sold out for today`);
+      return;
+    }
     addItem({
       id: item.id,
       title: item.title,
-      detail: item.tag,
+      detail: item.category,
       price: item.priceNum,
       priceLabel: item.priceLabel,
       image: item.image,
@@ -66,7 +47,7 @@ export default function Menu() {
     });
   };
 
-  const handleShare = async (item: (typeof enriched)[number]) => {
+  const handleShare = async (item: MenuItem) => {
     const url = typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}#${item.id}` : "";
     try {
       if (navigator.share) await navigator.share({ title: item.title, text: item.detail, url });
@@ -109,7 +90,7 @@ export default function Menu() {
                   <Sparkles size={13} className="text-[var(--terra)]" /> Decorated by hand
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full bg-[var(--paper)] px-4 py-2 text-[12.5px] font-extrabold text-[var(--ink-soft)]">
-                  <ShoppingBag size={13} className="text-[var(--butter-deep)]" /> Shop + studio live
+                  <ShoppingBag size={13} className="text-[var(--butter-deep)]" /> Studio live stock
                 </span>
               </div>
             </div>
@@ -133,7 +114,7 @@ export default function Menu() {
               );
             })}
             <span className="ml-auto hidden items-center gap-1.5 text-[12px] font-semibold text-[var(--ink-mute)] sm:inline-flex">
-              <Info size={13} className="text-[var(--terra)]" /> Tap a cake to see details, save, or add to bag
+              <Info size={13} className="text-[var(--terra)]" /> Tap a sweet item to see details or add to bag
             </span>
           </div>
           <div className="hairline mt-4" />
@@ -143,15 +124,23 @@ export default function Menu() {
           <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-4" data-stagger>
             {visible.map((item) => {
               const fav = isFavorite(item.id);
+              const isSoldOut = item.isSoldOut || item.stock === 0;
+
               return (
                 <article key={item.id} id={item.id} className="group flex flex-col">
                   <div className="relative">
                     <button onClick={() => openQuick(item)} className="visual-tile block aspect-[0.92] w-full" aria-label={`View ${item.title} details`}>
-                      <img src={item.image} alt={item.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                      <img src={item.image} alt={item.title} loading="lazy" decoding="async" className={`h-full w-full object-cover transition-transform duration-300 ${isSoldOut ? "grayscale-[0.4] opacity-80" : ""}`} />
                     </button>
-                    <span className="pointer-events-none absolute left-3.5 top-3.5 rounded-full bg-white/90 px-3 py-1.5 text-[10.5px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink)] backdrop-blur-sm">
-                      {item.tag}
-                    </span>
+                    {isSoldOut ? (
+                      <span className="pointer-events-none absolute left-3.5 top-3.5 rounded-full bg-[oklch(0.35_0.03_30)] px-3 py-1.5 text-[10.5px] font-extrabold uppercase tracking-[0.1em] text-white shadow-sm">
+                        Sold out for today
+                      </span>
+                    ) : (
+                      <span className="pointer-events-none absolute left-3.5 top-3.5 rounded-full bg-white/90 px-3 py-1.5 text-[10.5px] font-extrabold uppercase tracking-[0.1em] text-[var(--ink)] backdrop-blur-sm">
+                        {item.category}
+                      </span>
+                    )}
                     <button
                       onClick={() => toggle(item.id, item.title)}
                       aria-label={fav ? "Remove from favorites" : "Save to favorites"}
@@ -171,9 +160,19 @@ export default function Menu() {
                   </div>
                   <p className="mt-2.5 max-w-[32ch] text-[13.5px] leading-6 text-[var(--ink-mute)]">{item.detail}</p>
                   <div className="mt-4 flex gap-2">
-                    <button onClick={() => handleAdd(item)} className="button-rose min-h-[44px] flex-1 px-3 py-3 text-[12.5px]">
-                      <ShoppingBag size={15} /> Add to bag
-                    </button>
+                    {isSoldOut ? (
+                      <button
+                        disabled
+                        aria-disabled="true"
+                        className="min-h-[44px] flex-1 rounded-full border border-[oklch(0.88_0.02_60)] bg-[oklch(0.93_0.01_60)] px-3 py-3 text-[12px] font-bold text-[oklch(0.55_0.02_45)] cursor-not-allowed flex items-center justify-center gap-1.5"
+                      >
+                        <Ban size={14} /> Sold out today
+                      </button>
+                    ) : (
+                      <button onClick={() => handleAdd(item)} className="button-rose min-h-[44px] flex-1 px-3 py-3 text-[12.5px]">
+                        <ShoppingBag size={15} /> Add to bag
+                      </button>
+                    )}
                     <button onClick={() => openQuick(item)} className="button-ink min-h-[44px] px-4 py-3 text-[12.5px]">
                       Details
                     </button>
@@ -197,10 +196,15 @@ export default function Menu() {
                   <div className="visual-tile aspect-[0.95]">
                     <img src={quick.image} alt={quick.title} className="h-full w-full object-cover" />
                   </div>
+                  {(quick.isSoldOut || quick.stock === 0) && (
+                    <span className="absolute top-8 left-8 rounded-full bg-[oklch(0.35_0.03_30)] px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-md">
+                      Sold out for today
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-col p-6 sm:p-8">
                   <DialogHeader className="space-y-1.5 text-left">
-                    <p className="eyebrow">{quick.serves} · seasonal</p>
+                    <p className="eyebrow">{quick.serves} · {quick.category}</p>
                     <DialogTitle className="font-display text-[31px] font-semibold leading-none tracking-[-0.015em] sm:text-[35px]">{quick.title}</DialogTitle>
                     <DialogDescription className="text-[13.5px] leading-6 text-[var(--ink-soft)]">{quick.story}</DialogDescription>
                   </DialogHeader>
@@ -209,7 +213,15 @@ export default function Menu() {
                     {quick.allergens.map((a) => (
                       <span key={a} className="rounded-full bg-[var(--paper)] px-3 py-1.5 text-[11px] font-extrabold text-[var(--ink-mute)]">{a}</span>
                     ))}
-                    <span className="rounded-full bg-[var(--blush)] px-3 py-1.5 text-[11px] font-extrabold text-[oklch(0.45_0.08_20)]">Made to order · 5-day lead</span>
+                    {quick.stock > 0 && !quick.isSoldOut ? (
+                      <span className="rounded-full bg-[var(--sage-soft)] px-3 py-1.5 text-[11px] font-extrabold text-[var(--sage-deep)]">
+                        {quick.stock} available today
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-[var(--blush)] px-3 py-1.5 text-[11px] font-extrabold text-[var(--terra)]">
+                        Sold out today
+                      </span>
+                    )}
                   </div>
 
                   <div className="mt-5 flex items-baseline justify-between rounded-2xl bg-[var(--paper)] p-4">
@@ -218,22 +230,33 @@ export default function Menu() {
                   </div>
                   <p className="mt-2 text-[11.5px] leading-4 text-[var(--ink-mute)]">Final price varies by flavor, filling, and finish — see the studio for a live total.</p>
 
-                  <div className="mt-5 flex items-center gap-3">
-                    <span className="text-[12.5px] font-extrabold text-[var(--ink)]">Quantity</span>
-                    <div className="ml-auto flex items-center rounded-full border-[1.5px] border-[oklch(0.88_0.03_60)] bg-[var(--paper)]">
-                      <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-10 w-10 place-items-center rounded-l-full text-[var(--terra)] hover:bg-[var(--blush)]" aria-label="Decrease quantity"><Minus size={15} /></button>
-                      <span className="min-w-[44px] text-center text-[14px] font-extrabold tabular-nums">{qty}</span>
-                      <button onClick={() => setQty((q) => Math.min(6, q + 1))} className="grid h-10 w-10 place-items-center rounded-r-full text-[var(--terra)] hover:bg-[var(--blush)]" aria-label="Increase quantity"><Plus size={15} /></button>
+                  {!(quick.isSoldOut || quick.stock === 0) && (
+                    <div className="mt-5 flex items-center gap-3">
+                      <span className="text-[12.5px] font-extrabold text-[var(--ink)]">Quantity</span>
+                      <div className="ml-auto flex items-center rounded-full border-[1.5px] border-[oklch(0.88_0.03_60)] bg-[var(--paper)]">
+                        <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-10 w-10 place-items-center rounded-l-full text-[var(--terra)] hover:bg-[var(--blush)]" aria-label="Decrease quantity"><Minus size={15} /></button>
+                        <span className="min-w-[44px] text-center text-[14px] font-extrabold tabular-nums">{qty}</span>
+                        <button onClick={() => setQty((q) => Math.min(quick.stock, q + 1))} className="grid h-10 w-10 place-items-center rounded-r-full text-[var(--terra)] hover:bg-[var(--blush)]" aria-label="Increase quantity"><Plus size={15} /></button>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="mt-6 grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => { handleAdd(quick, qty); setQuick(null); }}
-                      className="button-rose justify-center py-3.5 text-[13px]"
-                    >
-                      Add to bag — ${(quick.priceNum * qty)}
-                    </button>
+                    {quick.isSoldOut || quick.stock === 0 ? (
+                      <button
+                        disabled
+                        className="rounded-full bg-[oklch(0.93_0.01_60)] py-3.5 text-[12.5px] font-bold text-[oklch(0.55_0.02_45)] cursor-not-allowed"
+                      >
+                        Sold out for today
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => { handleAdd(quick, qty); setQuick(null); }}
+                        className="button-rose justify-center py-3.5 text-[13px]"
+                      >
+                        Add to bag — ${(quick.priceNum * qty)}
+                      </button>
+                    )}
                     <button
                       onClick={() => { const fav = isFavorite(quick.id); toggle(quick.id, quick.title); if (fav) toast("Removed from wishlist"); }}
                       className={`inline-flex items-center justify-center gap-1.5 rounded-full border-[1.5px] px-3 py-3.5 text-[13px] font-bold transition-colors ${
@@ -254,7 +277,7 @@ export default function Menu() {
                     </button>
                   </div>
 
-                  <p className="mt-5 text-center text-[11.5px] leading-4 text-[var(--ink-mute)]">Portfolio demo — bag is saved locally, no payment collected.</p>
+                  <p className="mt-5 text-center text-[11.5px] leading-4 text-[var(--ink-mute)]">Syncs with live bakery inventory · bag is saved locally.</p>
                 </div>
               </div>
             )}

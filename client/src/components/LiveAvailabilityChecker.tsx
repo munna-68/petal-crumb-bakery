@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CalendarDays, ArrowRight, Clock3 } from "lucide-react";
 import { Link } from "wouter";
+import { useBakeryStore } from "@/lib/bakeryStore";
 
 const addDays = (d: Date, days: number) => {
   const c = new Date(d);
@@ -8,13 +9,12 @@ const addDays = (d: Date, days: number) => {
   return c;
 };
 
-const formatDate = (d: Date) =>
-  new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(d);
-
 const toInputDate = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export function LiveAvailabilityChecker() {
+  const { isDateAvailable, settings } = useBakeryStore();
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -23,26 +23,53 @@ export function LiveAvailabilityChecker() {
   const selectedDate = new Date(`${dateStr}T12:00:00`);
   const diffDays = Math.ceil((selectedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-  let status: "open" | "rush" | "limited" | "invalid" = "open";
+  const avail = isDateAvailable(dateStr);
+  const isBlackout = settings.blackoutDates.includes(dateStr);
+
+  let status: "open" | "rush" | "limited" | "invalid" | "blackout" | "full" = "open";
   let badgeClass = "bg-[var(--sage-soft)] text-[var(--sage-deep)]";
+  let badgeLabel = "Available";
   let statusTitle = "Kitchen open · standard lead time";
   let statusDesc = "Ample studio preparation time. Standard ingredients and flowers will be scheduled.";
 
-  if (diffDays < 1) {
+  if (diffDays < 0) {
     status = "invalid";
     badgeClass = "bg-[oklch(0.92_0.012_70)] text-[var(--ink-mute)]";
+    badgeLabel = "Date in past";
     statusTitle = "Date in the past";
     statusDesc = "Please pick an upcoming date for your celebration.";
-  } else if (diffDays < 5) {
+  } else if (isBlackout) {
+    status = "blackout";
+    badgeClass = "bg-[oklch(0.92_0.012_70)] text-[var(--ink-mute)]";
+    badgeLabel = "Studio Closed";
+    statusTitle = "Studio closed (Blackout date)";
+    statusDesc = avail.reason || "The kitchen is scheduled for deep clean or private studio baking on this date.";
+  } else if (!avail.available) {
+    if (avail.remainingSpots === 0) {
+      status = "full";
+      badgeClass = "bg-[oklch(0.92_0.012_70)] text-[var(--ink-mute)]";
+      badgeLabel = "Slots Full";
+      statusTitle = "Kitchen capacity reached";
+      statusDesc = avail.reason || "All daily bake slots are spoken for. Please choose an adjacent date.";
+    } else {
+      status = "invalid";
+      badgeClass = "bg-[oklch(0.92_0.012_70)] text-[var(--ink-mute)]";
+      badgeLabel = "Lead Time";
+      statusTitle = "Advance notice required";
+      statusDesc = avail.reason || `Custom cakes require a minimum lead time.`;
+    }
+  } else if (avail.rush) {
     status = "rush";
-    badgeClass = "bg-[var(--blush)] text-[oklch(0.45_0.08_20)]";
-    statusTitle = "Rush kitchen hold · +35% priority fee";
-    statusDesc = "Under our 5-day minimum lead time. Priority rush schedule required to secure early ingredients.";
-  } else if (diffDays % 7 === 5 || diffDays % 7 === 6) {
+    badgeClass = "bg-[var(--blush)] text-[var(--terra)]";
+    badgeLabel = "Rush window";
+    statusTitle = `Rush kitchen window · +${settings.rushFeePercentage}% fee`;
+    statusDesc = avail.reason || `Within the priority rush window. Expedited studio preparation required.`;
+  } else if (avail.remainingSpots !== undefined && avail.remainingSpots <= 2) {
     status = "limited";
     badgeClass = "bg-[var(--butter-soft)] text-[oklch(0.5_0.08_75)]";
-    statusTitle = "High demand weekend · 1 spot left";
-    statusDesc = "Saturday & Sunday pickup windows fill quickly. We recommend submitting your quote promptly.";
+    badgeLabel = `${avail.remainingSpots} spot${avail.remainingSpots === 1 ? "" : "s"} left`;
+    statusTitle = `High demand date · ${avail.remainingSpots} slot${avail.remainingSpots === 1 ? "" : "s"} left`;
+    statusDesc = "Weekend and holiday pickups fill quickly. We recommend locking in your hold.";
   }
 
   const presets = [
@@ -104,7 +131,7 @@ export function LiveAvailabilityChecker() {
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`rounded-full px-2.5 py-1 text-[9.5px] font-extrabold uppercase tracking-[0.13em] ${badgeClass}`}>
-              {status === "open" ? "Available" : status === "rush" ? "Rush window" : status === "limited" ? "Limited spots" : "Date past"}
+              {badgeLabel}
             </span>
             <span className="text-[13.5px] font-extrabold text-[var(--ink)]">{statusTitle}</span>
           </div>
@@ -114,7 +141,7 @@ export function LiveAvailabilityChecker() {
         </div>
 
         <Link
-          href="/custom-order"
+          href={`/custom-order?date=${dateStr}`}
           className="button-rose min-h-[44px] justify-center whitespace-nowrap self-stretch px-5 py-3 sm:self-auto"
         >
           Hold this date <ArrowRight size={14} />

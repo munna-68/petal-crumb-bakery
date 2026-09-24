@@ -33,12 +33,27 @@ import {
   SprigDivider,
 } from "@/components/decor";
 import { Leaf, CakeSlice } from "lucide-react";
+import { useBakeryStore } from "@/lib/bakeryStore";
 
 const heroCake = withBase("/images/hero-raspberry-garden-cake.png");
 
 export default function Home() {
   const { toggle, isFavorite } = useFavorites();
   const { addItem } = useCart();
+  const { menuItems } = useBakeryStore();
+
+  const petiteCake = menuItems.find((m) => m.id.includes("petite")) || menuItems[1] || {
+    id: "menu-cake-petite",
+    title: "Petite Pistachio Cloud",
+    serves: "Serves 6–8",
+    priceNum: 54,
+    priceLabel: "from $54",
+    image: withBase("/images/photo-1602351447937-745cb720612f.jpg"),
+    stock: 12,
+    isSoldOut: false,
+  };
+  const isPetiteSoldOut = petiteCake.isSoldOut || petiteCake.stock === 0;
+  const lowestPrice = menuItems.length > 0 ? Math.min(...menuItems.map((m) => m.priceNum)) : 34;
 
   return (
     <div className="min-h-screen overflow-clip bg-[var(--cream)] text-[var(--ink)]">
@@ -251,43 +266,50 @@ export default function Home() {
               </div>
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 rounded-2xl bg-[var(--paper)]/95 px-4 py-3 shadow-[0_10px_30px_oklch(0.305_0.033_42/0.12)] sm:bottom-5 sm:left-5 sm:right-5">
                 <span className="text-[12.5px] font-bold leading-4 text-[var(--ink)]">
-                  Petite vanilla{" "}
+                  {petiteCake.title}{" "}
                   <span className="font-medium text-[var(--ink-mute)]">
-                    · serves 6–8
+                    · {petiteCake.serves}
                   </span>
                 </span>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() =>
+                    disabled={isPetiteSoldOut}
+                    onClick={() => {
+                      if (isPetiteSoldOut) {
+                        toast.error(`${petiteCake.title} is sold out today`);
+                        return;
+                      }
                       addItem({
-                        id: "menu-petite",
-                        title: "Petite cake",
-                        detail: "Serves 6–8 · seasonal",
-                        price: 54,
-                        priceLabel: "from $54",
-                        image: withBase(
-                          "/images/photo-1602351447937-745cb720612f.jpg",
-                        ),
+                        id: petiteCake.id,
+                        title: petiteCake.title,
+                        detail: `${petiteCake.serves} · seasonal`,
+                        price: petiteCake.priceNum,
+                        priceLabel: petiteCake.priceLabel,
+                        image: petiteCake.image,
                         quantity: 1,
-                      })
-                    }
-                    className="grid h-9 w-9 place-items-center rounded-full bg-[var(--cream)] text-[var(--ink-soft)] transition-colors hover:bg-[var(--blush)] hover:text-[var(--terra)]"
-                    aria-label="Add petite cake to bag"
+                      });
+                    }}
+                    className={`grid h-9 w-9 place-items-center rounded-full transition-colors ${
+                      isPetiteSoldOut
+                        ? "bg-[oklch(0.92_0.01_60)] text-[oklch(0.6_0.02_50)] cursor-not-allowed"
+                        : "bg-[var(--cream)] text-[var(--ink-soft)] hover:bg-[var(--blush)] hover:text-[var(--terra)]"
+                    }`}
+                    aria-label={`Add ${petiteCake.title} to bag`}
                   >
                     <ShoppingBag size={15} />
                   </button>
                   <button
-                    onClick={() => toggle("home-petite", "Petite vanilla")}
+                    onClick={() => toggle(petiteCake.id, petiteCake.title)}
                     aria-label="Save"
-                    className={`grid h-9 w-9 place-items-center rounded-full transition-colors ${isFavorite("home-petite") ? "bg-[var(--terra)] text-white" : "bg-[var(--cream)] text-[var(--ink-soft)] hover:bg-[var(--blush)] hover:text-[var(--terra)]"}`}
+                    className={`grid h-9 w-9 place-items-center rounded-full transition-colors ${isFavorite(petiteCake.id) ? "bg-[var(--terra)] text-white" : "bg-[var(--cream)] text-[var(--ink-soft)] hover:bg-[var(--blush)] hover:text-[var(--terra)]"}`}
                   >
                     <Heart
                       size={15}
-                      className={isFavorite("home-petite") ? "fill-white" : ""}
+                      className={isFavorite(petiteCake.id) ? "fill-white" : ""}
                     />
                   </button>
                   <span className="hidden rounded-full bg-[var(--blush)] px-3 py-1.5 text-[12px] font-extrabold text-[oklch(0.45_0.08_20)] sm:block">
-                    From $54
+                    {isPetiteSoldOut ? "Sold out" : `From $${petiteCake.priceNum}`}
                   </span>
                 </div>
               </div>
@@ -302,7 +324,7 @@ export default function Home() {
                 img: "/images/photo-1535254973040-607b474cb50d.jpg",
                 alt: "Single tier celebration cake",
                 title: "Shop the menu",
-                note: "from $34",
+                note: `from $${lowestPrice}`,
                 aspect: "aspect-[1.05]",
               },
               {
